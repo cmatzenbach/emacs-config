@@ -1,3 +1,6 @@
+(require 'evil)
+(evil-mode 1)
+
 ;; enable c-u and c-d scrolling
 (setq evil-want-C-u-scroll t)
 
@@ -21,5 +24,13 @@
 (define-key minibuffer-local-isearch-map [escape] 'minibuffer-keyboard-quit)
 (global-set-key [escape] 'evil-exit-emacs-state)
 
-(require 'evil)
-(evil-mode 1)
+;; evil window controls
+(define-key evil-normal-state-map (kbd "C-w h") 'evil-window-left) 
+(define-key evil-normal-state-map (kbd "C-w j") 'evil-window-down) 
+(define-key evil-normal-state-map (kbd "C-w k") 'evil-window-up) 
+(define-key evil-normal-state-map (kbd "C-w l") 'evil-window-right) 
+
+;; map fd to escape normal mode
+(require 'key-chord) 
+(key-chord-mode 1) 
+(key-chord-define-global "fd" 'evil-normal-state) 

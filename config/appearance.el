@@ -18,4 +18,4 @@
 )
 
 ;; set solarized-dark colorscheme
-;(when (display-graphic-p) (load-theme 'solarized-dark t))
+(when (display-graphic-p) (load-theme 'brin t)) 
