@@ -41,6 +41,7 @@
 
 ;; load custom config modules
 (load-user-file "appearance.el")
+(load-user-file "evil-evilified-state.el")
 
 
 ;; ======== IVY/SWIPER ========
@@ -49,11 +50,17 @@
   :diminish ivy-mode
   :config
   (ivy-mode 1)
-  (setq ivy-use-virtual-buffers t)
+  (setq ivy-use-virtual-buffers t
+            ivy-count-format "%d/%d ")
+
   (setq ivy-re-builders-alist
 	'((t . ivy--regex-ignore-order)))
   :bind
-  ("s-f" . swiper))
+  ("s-f" . swiper)
+  (:map ivy-minibuffer-map
+	("C-k" . ivy-previous-line)
+	("C-j" . ivy-next-line)
+	("C-l" . ivy-alt-done))) 
 
 
 ;; ======== EVIL MODE ========
@@ -64,6 +71,9 @@
   (setq evil-want-C-u-scroll t)
   :config
   (evil-mode 1))
+    
+;; load evil-evilified-state (from author of spacemacs)
+(require 'evil-evilified-state)
 
 ;; use esc to exit minibuffer
 (defun minibuffer-keyboard-quit ()
@@ -74,16 +84,16 @@
   (if (and delete-selection-mode transient-mark-mode mark-active)
     (setq deactivate-mark  t)
     (when (get-buffer "*Completions*") (delete-windows-on "*Completions*"))
-    (abort-recursive-edit)))
+    (abort-recursive-edit))) 
 
-;(define-key evil-normal-state-map [escape] 'keyboard-quit)
-;(define-key evil-visual-state-map [escape] 'keyboard-quit)
+(define-key evil-normal-state-map [escape] 'keyboard-quit)
+(define-key evil-visual-state-map [escape] 'keyboard-quit)
 (define-key minibuffer-local-map [escape] 'minibuffer-keyboard-quit)
 (define-key minibuffer-local-ns-map [escape] 'minibuffer-keyboard-quit)
 (define-key minibuffer-local-completion-map [escape] 'minibuffer-keyboard-quit)
 (define-key minibuffer-local-must-match-map [escape] 'minibuffer-keyboard-quit)
 (define-key minibuffer-local-isearch-map [escape] 'minibuffer-keyboard-quit)
-(global-set-key [escape] 'evil-exit-emacs-state)
+;(global-set-key [escape] 'evil-exit-emacs-state)
 
 ;; map fd to escape normal mode
 (require 'key-chord) 
@@ -98,6 +108,7 @@
 
 ;; ======== WHICH-KEY && GENERAL ========
 (use-package which-key :ensure t :config (which-key-mode 1))
+(setq which-key-idle-delay 0.3) 
 (use-package general :ensure t)
 
 (general-define-key
@@ -105,8 +116,8 @@
  :prefix "SPC"
  :non-normal-prefix "C-SPC"
  "SPC" 'counsel-M-x
- "'" '(iterm-focus :which-key "iterm")
- "?" '(iterm-goto-filedir-or-home :which-key "iterm - goto dir")
+ "'" '(new-eshell)
+ ;"?" '(eshell- -goto-filedir-or-home :which-key "iterm - goto dir")
  "TAB" '(switch-to-other-buffer :which-key "prev buffer")
 
  ;; applications
@@ -157,15 +168,52 @@
   (add-hook 'prog-mode-hook 'global-company-mode)
   (setq company-tooltip-align-annotations t))
 
+(with-eval-after-load 'company
+  (define-key company-active-map (kbd "M-n") nil)
+  (define-key company-active-map (kbd "M-p") nil)
+  (define-key company-active-map (kbd "C-j") #'company-select-next)
+  (define-key company-active-map (kbd "C-k") #'company-select-previous)
+  (define-key company-active-map (kbd "C-l") #'company-complete))
 
-;; ======== HELPER FUNCTIONS ========
+
+;; ======== JAVASCRIPT ========
+(use-package js2-mode
+  :ensure t) 
+(add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode)) 
+;; better imenu
+(add-hook 'js2-mode-hook #'js2-imenu-extras-mode) 
+
+(use-package js2-refactor
+  :ensure t)
+(use-package 'xref-js2
+  :ensure t)
+(add-hook 'js2-mode-hook #'js2-refactor-mode)
+(js2r-add-keybindings-with-prefix "C-c C-r")
+(define-key js2-mode-map (kbd "C-k") #'js2r-kill)
+
+;; js-mode (which js2 is based on) binds "M-." which conflicts with xref, so
+;; unbind it.
+(define-key js-mode-map (kbd "M-.") nil)
+
+(add-hook 'js2-mode-hook (lambda ()
+  (add-hook 'xref-backend-functions #'xref-js2-xref-backend nil t)))
+
+
+;; ======== HELPER FUNCTIONS ======== 
 (defun open-config-file()
   (interactive)
   (find-file "~/.emacs.d/init.el"))
+
 (defun reload-config-file()
   (interactive)
   (load-file "~/.emacs.d/init.el"))
 
+(defun new-eshell ()
+  (interactive)
+  (let* ((lines (window-body-height))
+         (new-window (split-window-vertically (floor (* 0.7 lines)))))
+    (select-window new-window)
+    (eshell "eshell"))) 
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
@@ -177,7 +225,7 @@
     ("3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa" default)))
  '(package-selected-packages
    (quote
-    (smart-mode-line sublime-themes counsel general evil))))
+    (js2-mode smart-mode-line sublime-themes counsel general evil))))
 
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
