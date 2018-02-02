@@ -17,6 +17,8 @@
 (global-linum-mode 1)
 (scroll-bar-mode -1)
 (tool-bar-mode -1)
+;; avoid having to answer "yes" and "no" every time - change to "y" and "n"
+(defalias 'yes-or-no-p 'y-or-n-p)
 
 (require 'package)
 (setq package-enable-at-startup nil)
@@ -116,7 +118,7 @@
  :prefix "SPC"
  :non-normal-prefix "C-SPC"
  "SPC" 'counsel-M-x
- "'" '(new-eshell)
+ "'" 'new-eshell
  ;"?" '(eshell- -goto-filedir-or-home :which-key "iterm - goto dir")
  "TAB" '(switch-to-other-buffer :which-key "prev buffer")
 
@@ -185,7 +187,7 @@
 
 (use-package js2-refactor
   :ensure t)
-(use-package 'xref-js2
+(use-package xref-js2
   :ensure t)
 (add-hook 'js2-mode-hook #'js2-refactor-mode)
 (js2r-add-keybindings-with-prefix "C-c C-r")
