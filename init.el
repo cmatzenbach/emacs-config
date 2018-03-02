@@ -33,6 +33,7 @@
   (package-refresh-contents) ; update package archives
   (package-install 'use-package)) ; install most recent version of use-package
 (require 'use-package)
+(setq use-package-always-ensure t)
 
 (defconst user-config-dir "~/.emacs.d/config/")
 
@@ -48,7 +49,6 @@
 
 ;; ======== IVY/SWIPER ========
 (use-package counsel
-  :ensure t
   :diminish ivy-mode
   :config
   (ivy-mode 1)
@@ -67,7 +67,6 @@
 
 ;; ======== EVIL MODE ========
 (use-package evil
-  :ensure t
   :diminish evil-mode
   :init
   (setq evil-want-C-u-scroll t)
@@ -103,15 +102,14 @@
 (key-chord-define-global "fd" 'evil-normal-state) 
 
 (use-package evil-surround
-  :ensure t
   :config
   (global-evil-surround-mode))
 
 
 ;; ======== WHICH-KEY && GENERAL ========
-(use-package which-key :ensure t :config (which-key-mode 1))
+(use-package which-key :config (which-key-mode 1))
 (setq which-key-idle-delay 0.3) 
-(use-package general :ensure t)
+(use-package general)
 
 (general-define-key
  :states '(normal visual insert emacs)
@@ -165,7 +163,6 @@
 
 ;; ======== COMPANY ========
 (use-package company
-  :ensure t
   :config
   (add-hook 'prog-mode-hook 'global-company-mode)
   (setq company-tooltip-align-annotations t))
@@ -177,28 +174,25 @@
   (define-key company-active-map (kbd "C-k") #'company-select-previous)
   (define-key company-active-map (kbd "C-l") #'company-complete))
 
+
 ;; ======== SPACELINE =========
-(use-package all-the-icons :ensure t)
-(use-package spaceline :ensure t)
+(use-package all-the-icons)
+(use-package spaceline)
 (require 'spaceline-config)
 (use-package spaceline-all-the-icons
-  :ensure t
   :after spaceline
   :config (spaceline-all-the-icons-theme))
 (setq spaceline-all-the-icons-separator-type 'arrow) 
 
 
 ;; ======== JAVASCRIPT ========
-(use-package js2-mode
-  :ensure t) 
+(use-package js2-mode)
 (add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode)) 
 ;; better imenu
 (add-hook 'js2-mode-hook #'js2-imenu-extras-mode) 
 
-(use-package js2-refactor
-  :ensure t)
-(use-package xref-js2
-  :ensure t)
+(use-package js2-refactor)
+(use-package xref-js2)
 (add-hook 'js2-mode-hook #'js2-refactor-mode)
 (js2r-add-keybindings-with-prefix "C-c C-r")
 (define-key js2-mode-map (kbd "C-k") #'js2r-kill)
