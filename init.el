@@ -177,6 +177,16 @@
   (define-key company-active-map (kbd "C-k") #'company-select-previous)
   (define-key company-active-map (kbd "C-l") #'company-complete))
 
+;; ======== SPACELINE =========
+(use-package all-the-icons :ensure t)
+(use-package spaceline :ensure t)
+(require 'spaceline-config)
+(use-package spaceline-all-the-icons
+  :ensure t
+  :after spaceline
+  :config (spaceline-all-the-icons-theme))
+(setq spaceline-all-the-icons-separator-type 'arrow) 
+
 
 ;; ======== JAVASCRIPT ========
 (use-package js2-mode
