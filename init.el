@@ -11,6 +11,7 @@
 (setq coding-system-for-write 'utf-8 )
 (setq sentence-end-double-space nil)	; sentence SHOULD end with only a point.
 (setq default-fill-column 80)		; toggle wrapping text at the 80th character
+(menu-bar-mode -1)                      ; disable menu bar
 (setq initial-scratch-message "Welcome to Emacs") ; print a default message in the empty scratch buffer opened at startup
 (setq user-full-name "Chris Matzenbach"
       user-mail-address "cmatzenbach@gmail.com")
@@ -45,6 +46,15 @@
 ;; load custom config modules
 (load-user-file "appearance.el")
 (load-user-file "evil-evilified-state.el")
+
+
+;; ======== WINDOWS SPECIFIC ========
+;; Set default font
+(set-face-attribute 'default nil
+                    :family "Source Code Pro"
+                    :height 110
+                    :weight 'normal
+                    :width 'normal)
 
 
 ;; ======== IVY/SWIPER ========
@@ -164,8 +174,10 @@
 ;; ======== COMPANY ========
 (use-package company
   :config
-  (add-hook 'prog-mode-hook 'global-company-mode)
-  (setq company-tooltip-align-annotations t))
+  :init (add-hook 'prog-mode-hook 'global-company-mode)
+  (setq company-tooltip-align-annotations t
+	company-minimum-prefix-length 2
+	company-idle-delay 0.1))
 
 (with-eval-after-load 'company
   (define-key company-active-map (kbd "M-n") nil)
@@ -174,15 +186,29 @@
   (define-key company-active-map (kbd "C-k") #'company-select-previous)
   (define-key company-active-map (kbd "C-l") #'company-complete))
 
+;; Company Tern
+(use-package company-tern)
+(add-to-list 'company-backends 'company-tern)
+(add-hook 'js2-mode-hook (lambda ()
+			   (tern-mode)
+			   (company-mode)))
+(define-key tern-mode-keymap (kbd "M-.") nil)
+(define-key tern-mode-keymap (kbd "M-,") nil)
+
+
+;; ======== FLYCHECK ========
+(use-package flycheck
+  :init (global-flycheck-mode))
+
 
 ;; ======== SPACELINE =========
-(use-package all-the-icons)
-(use-package spaceline)
-(require 'spaceline-config)
-(use-package spaceline-all-the-icons
-  :after spaceline
-  :config (spaceline-all-the-icons-theme))
-(setq spaceline-all-the-icons-separator-type 'arrow) 
+;; (use-package all-the-icons)
+;; (use-package spaceline)
+;; (require 'spaceline-config)
+;; (use-package spaceline-all-the-icons
+;;   :after spaceline
+;;   :config (spaceline-all-the-icons-theme))
+;; (setq spaceline-all-the-icons-separator-type 'arrow) 
 
 
 ;; ======== JAVASCRIPT ========
@@ -190,6 +216,7 @@
 (add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode)) 
 ;; better imenu
 (add-hook 'js2-mode-hook #'js2-imenu-extras-mode) 
+(setq js2-highlight-level 3)
 
 (use-package js2-refactor)
 (use-package xref-js2)
@@ -201,8 +228,35 @@
 ;; unbind it.
 (define-key js-mode-map (kbd "M-.") nil)
 
+(add-hook 'js2-mode-hook 'enable-paredit-nonlisp)
+(add-hook 'js2-mode-hook 'flycheck-mode)
 (add-hook 'js2-mode-hook (lambda ()
   (add-hook 'xref-backend-functions #'xref-js2-xref-backend nil t)))
+
+;; indium
+;;(use-package indium)
+
+
+;; ======== TYPESCRIPT ==============
+(use-package tide)
+(defun setup-tide-mode ()
+  (interactive)
+  (tide-setup)
+  (flycheck-mode +1)
+  (setq flycheck-check-syntax-automatically '(save mode-enabled))
+  (eldoc-mode +1)
+  (tide-hl-identifier-mode +1)
+  ;; company is an optional dependency. You have to
+  ;; install it separately via package-install
+  ;; `M-x package-install [ret] company`
+  (company-mode +1)) 
+
+;; aligns annotation to the right hand side
+(setq company-tooltip-align-annotations t)
+
+;; enable paredit on mode and initialize
+(add-hook 'typescript-mode-hook 'enable-paredit-nonlisp)
+(add-hook 'typescript-mode-hook #'setup-tide-mode)
 
 
 ;; ======== HELPER FUNCTIONS ======== 
@@ -221,6 +275,13 @@
     (select-window new-window)
     (eshell "eshell"))) 
 
+(defun enable-paredit-nonlisp ()
+  "Turn on paredit mode for non-lisps."
+  (interactive)
+  (set (make-local-variable 'paredit-space-for-delimiter-predicates)
+       '((lambda (endp delimiter) nil)))
+  (paredit-mode 1)) 
+
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -231,7 +292,7 @@
     ("3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa" default)))
  '(package-selected-packages
    (quote
-    (js2-mode smart-mode-line sublime-themes counsel general evil))))
+    (indium js2-mode smart-mode-line sublime-themes counsel general evil))))
 
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
