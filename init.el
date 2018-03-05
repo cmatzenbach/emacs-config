@@ -10,7 +10,7 @@
 (setq coding-system-for-read 'utf-8 )	; use utf-8 by default
 (setq coding-system-for-write 'utf-8 )
 (setq sentence-end-double-space nil)	; sentence SHOULD end with only a point.
-(setq default-fill-column 80)		; toggle wrapping text at the 80th character
+(setq fill-column 80)		; toggle wrapping text at the 80th character
 (menu-bar-mode -1)                      ; disable menu bar
 (setq initial-scratch-message "Welcome to Emacs") ; print a default message in the empty scratch buffer opened at startup
 (setq user-full-name "Chris Matzenbach"
@@ -23,10 +23,10 @@
 
 (require 'package)
 (setq package-enable-at-startup nil)
-(setq package-archives '(("melpa". "http://melpa.milkbox.net/packages/")
-				 ("org" . "http://orgmode.org/elpa/")
-				 ("marmalade" . "http://marmalade-repo.org/packages/")
-				 ("melpa-stable" . "http://melpa-stable.milkbox.net/packages/")))
+(setq package-archives '(("melpa". "https://melpa.milkbox.net/packages/")
+				 ("org" . "https://orgmode.org/elpa/")
+				 ("marmalade" . "https://marmalade-repo.org/packages/")
+				 ("melpa-stable" . "https://melpa-stable.milkbox.net/packages/")))
 (package-initialize)
 
 ;; bootstrap 'use-package'
@@ -50,11 +50,11 @@
 
 ;; ======== WINDOWS SPECIFIC ========
 ;; Set default font
-(set-face-attribute 'default nil
-                    :family "Source Code Pro"
-                    :height 110
-                    :weight 'normal
-                    :width 'normal)
+;; (set-face-attribute 'default nil
+;;                     :family "Source Code Pro"
+;;                     :height 110
+;;                     :weight 'normal
+;;                     :width 'normal)
 
 
 ;; ======== IVY/SWIPER ========
@@ -68,11 +68,11 @@
   (setq ivy-re-builders-alist
 	'((t . ivy--regex-ignore-order)))
   :bind
-  ("s-f" . swiper)
+  ("\C-s" . swiper)
   (:map ivy-minibuffer-map
 	("C-k" . ivy-previous-line)
 	("C-j" . ivy-next-line)
-	("C-l" . ivy-alt-done))) 
+	("C-l" . ivy-alt-done)))
 
 
 ;; ======== EVIL MODE ========
@@ -201,14 +201,34 @@
   :init (global-flycheck-mode))
 
 
+;; ======== GGTAGS ========
+;(use-package ggtags)
+;(add-hook 'c-mode-common-hook
+;	  (lambda ()
+;	    (when (derived-mode-p 'c-mode 'c++-mode 'java-mode 'asm-mode)
+;	      (ggtags-mode 1))))
+
+
+;; ======== COUNSEL GTAGS ========
+(use-package counsel-gtags)
+(add-hook 'c-mode-hook 'counsel-gtags-mode)
+(add-hook 'c++-mode-hook 'counsel-gtags-mode)
+
+(with-eval-after-load 'counsel-gtags
+  (define-key counsel-gtags-mode-map (kbd "M-t") 'counsel-gtags-find-definition)
+  (define-key counsel-gtags-mode-map (kbd "M-r") 'counsel-gtags-find-reference)
+  (define-key counsel-gtags-mode-map (kbd "M-s") 'counsel-gtags-find-symbol)
+  (define-key counsel-gtags-mode-map (kbd "M-,") 'counsel-gtags-go-backward))
+
+
 ;; ======== SPACELINE =========
-;; (use-package all-the-icons)
-;; (use-package spaceline)
-;; (require 'spaceline-config)
-;; (use-package spaceline-all-the-icons
-;;   :after spaceline
-;;   :config (spaceline-all-the-icons-theme))
-;; (setq spaceline-all-the-icons-separator-type 'arrow) 
+(use-package all-the-icons)
+(use-package spaceline)
+(require 'spaceline-config)
+(use-package spaceline-all-the-icons
+  :after spaceline
+  :config (spaceline-all-the-icons-theme))
+(setq spaceline-all-the-icons-separator-type 'arrow) 
 
 
 ;; ======== JAVASCRIPT ========
@@ -292,7 +312,7 @@
     ("3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa" default)))
  '(package-selected-packages
    (quote
-    (indium js2-mode smart-mode-line sublime-themes counsel general evil))))
+    (tide indium js2-mode smart-mode-line sublime-themes counsel general evil))))
 
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
