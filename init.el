@@ -50,14 +50,14 @@
 
 ;; ======== WINDOWS SPECIFIC ========
 ;; Set default font
-;; (set-face-attribute 'default nil
-;;                     :family "Source Code Pro"
-;;                     :height 110
-;;                     :weight 'normal
-;;                     :width 'normal)
+(set-face-attribute 'default nil
+                    :family "Source Code Pro"
+                    :height 110
+                    :weight 'normal
+                    :width 'normal)
 
 
-;; ======== IVY/SWIPER ========
+;; ======== COUNSELIVY/SWIPER ========
 (use-package counsel
   :diminish ivy-mode
   :config
@@ -68,7 +68,7 @@
   (setq ivy-re-builders-alist
 	'((t . ivy--regex-ignore-order)))
   :bind
-  ("\C-s" . swiper)
+  ("C-s" . swiper)
   (:map ivy-minibuffer-map
 	("C-k" . ivy-previous-line)
 	("C-j" . ivy-next-line)
@@ -116,6 +116,29 @@
   (global-evil-surround-mode))
 
 
+;; ======== EVIL-SURROUND ========
+(use-package evil-surround
+  :config
+  (global-evil-surround-mode 1))
+
+;; ======== (EVIL) SMARTPARENS ========
+(use-package smartparens)
+(require 'smartparens-config)
+(show-smartparens-global-mode +1)
+(define-key smartparens-mode-map (kbd ")") #'sp-paredit-like-close-round)
+(use-package evil-smartparens)
+
+;; ======== EVIL-CLEVERPARENS ========
+(use-package evil-cleverparens)
+(add-hook 'elisp-mode #'smartparens-mode)
+(add-hook 'elisp-mode #'evil-cleverparens-mode)
+
+;; ======== EDITORCONFIG ========
+(use-package editorconfig
+  :config
+  (editorconfig-mode 1))
+
+
 ;; ======== WHICH-KEY && GENERAL ========
 (use-package which-key :config (which-key-mode 1))
 (setq which-key-idle-delay 0.3) 
@@ -128,7 +151,7 @@
  "SPC" 'counsel-M-x
  "'" 'new-eshell
  ;"?" '(eshell- -goto-filedir-or-home :which-key "iterm - goto dir")
- "TAB" '(switch-to-other-buffer :which-key "prev buffer")
+ "TAB" 'switch-to-previous-buffer
 
  ;; applications
  "a" '(:ignore t :which-key "Applications")
@@ -222,14 +245,18 @@
 
 
 ;; ======== SPACELINE =========
-(use-package all-the-icons)
-(use-package spaceline)
-(require 'spaceline-config)
-(use-package spaceline-all-the-icons
-  :after spaceline
-  :config (spaceline-all-the-icons-theme))
-(setq spaceline-all-the-icons-separator-type 'arrow) 
+;(use-package all-the-icons)
+;(use-package spaceline)
+;(require 'spaceline-config)
+;(use-package spaceline-all-the-icons
+;  :after spaceline
+;  :config (spaceline-all-the-icons-theme))
+;(setq spaceline-all-the-icons-separator-type 'arrow) 
 
+
+;; ======== C-MODE ========
+(add-hook 'c-mode-hook #'evil-smartparens-mode)
+(sp-local-pair 'c-mode "{" nil :post-handlers '((my-create-newline-and-enter-sexp "RET")))
 
 ;; ======== JAVASCRIPT ========
 (use-package js2-mode)
@@ -248,7 +275,9 @@
 ;; unbind it.
 (define-key js-mode-map (kbd "M-.") nil)
 
-(add-hook 'js2-mode-hook 'enable-paredit-nonlisp)
+(add-hook 'js2-mode-hook #'smartparens-mode)
+(add-hook 'js2-mode-hook #'evil-smartparens-mode)
+(sp-local-pair 'js2-mode "{" nil :post-handlers '((my-create-newline-and-enter-sexp "RET")))
 (add-hook 'js2-mode-hook 'flycheck-mode)
 (add-hook 'js2-mode-hook (lambda ()
   (add-hook 'xref-backend-functions #'xref-js2-xref-backend nil t)))
@@ -275,8 +304,35 @@
 (setq company-tooltip-align-annotations t)
 
 ;; enable paredit on mode and initialize
-(add-hook 'typescript-mode-hook 'enable-paredit-nonlisp)
+(add-hook 'typescript-mode-hook #'smartparens-mode)
+(add-hook 'typescript-mode-hook #'evil-smartparens-mode)
+(sp-local-pair 'typescript-mode "{" nil :post-handlers '((my-create-newline-and-enter-sexp "RET")))
 (add-hook 'typescript-mode-hook #'setup-tide-mode)
+
+
+;; ======== PHP ========
+(use-package php-mode)
+(use-package company-php)
+(add-to-list 'auto-mode-alist '("\\.php\\'" . php-mode))
+(add-hook 'php-mode-hook
+          '(lambda ()
+             (require 'company-php)
+             (company-mode t)
+             (ac-php-core-eldoc-setup) ;; enable eldoc
+             (make-local-variable 'company-backends)
+             (add-to-list 'company-backends 'company-ac-php-backend)))
+
+(add-hook 'php-mode-hook #'smartparens-mode)
+(add-hook 'php-mode-hook #'evil-smartparens-mode)
+(sp-local-pair 'php-mode "{" nil :post-handlers '((my-create-newline-and-enter-sexp "RET")))
+
+
+;; ======== WEB MODE ========
+(use-package web-mode)
+(add-to-list 'auto-mode-alist '("\\.phtml\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.tpl\\.php\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.html\\.twig\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
 
 
 ;; ======== HELPER FUNCTIONS ======== 
@@ -301,6 +357,29 @@
   (set (make-local-variable 'paredit-space-for-delimiter-predicates)
        '((lambda (endp delimiter) nil)))
   (paredit-mode 1)) 
+(sp-local-pair 'c++-mode "{" nil :post-handlers '((my-create-newline-and-enter-sexp "RET")))
+
+(defun switch-to-previous-buffer ()
+  "Switch to previously open buffer. Repeated invocations toggle between two most recently opened buffers."
+  (interactive)
+  (switch-to-buffer (other-buffer (current-buffer) 1)))
+
+(defun my-create-newline-and-enter-sexp (&rest _ignored)
+  "Open a new brace or bracket expression, with relevant newlines and indent"
+  (newline)
+  (indent-according-to-mode)
+  (forward-line -1)
+  (indent-according-to-mode))
+
+(defun sp-paredit-like-close-round ()
+      "If the next character is a closing character as according to smartparens skip it, otherwise insert `last-input-event'"
+      (interactive)
+      (let ((pt (point)))
+        (if (and (< pt (point-max))
+                 (sp--char-is-part-of-closing (buffer-substring-no-properties pt (1+ pt))))
+            (forward-char 1)
+          (call-interactively #'self-insert-command))))
+
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
@@ -310,9 +389,12 @@
  '(custom-safe-themes
    (quote
     ("3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa" default)))
+ '(js-indent-level 2)
+ '(js2-bounce-indent-p t)
  '(package-selected-packages
    (quote
-    (tide indium js2-mode smart-mode-line sublime-themes counsel general evil))))
+    (ac-php company-php php-mode evil-cleverparens evil-smartparens smartparens tide indium js2-mode smart-mode-line sublime-themes counsel general evil)))
+ '(sp-highlight-pair-overlay nil))
 
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
