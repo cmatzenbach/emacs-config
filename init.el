@@ -18,15 +18,17 @@
 (global-linum-mode 1)
 (scroll-bar-mode -1)
 (tool-bar-mode -1)
+(setq-default indent-tabs-mode nil)     ; use spaces instead of tabs
 ;; avoid having to answer "yes" and "no" every time - change to "y" and "n"
 (defalias 'yes-or-no-p 'y-or-n-p)
 
 (require 'package)
 (setq package-enable-at-startup nil)
-(setq package-archives '(("melpa". "https://melpa.milkbox.net/packages/")
-				 ("org" . "https://orgmode.org/elpa/")
-				 ("marmalade" . "https://marmalade-repo.org/packages/")
-				 ("melpa-stable" . "https://melpa-stable.milkbox.net/packages/")))
+(setq package-archives '(("melpa". "http://melpa.org/packages/")
+			 ("gnu" . "http://elpa.gnu.org/packages/")
+			 ("org" . "https://orgmode.org/elpa/")
+			 ("marmalade" . "https://marmalade-repo.org/packages/")
+			 ("melpa-stable" . "https://melpa-stable.milkbox.net/packages/")))
 (package-initialize)
 
 ;; bootstrap 'use-package'
@@ -46,15 +48,18 @@
 ;; load custom config modules
 (load-user-file "appearance.el")
 (load-user-file "evil-evilified-state.el")
+;; load manually installed local packages
+(add-to-list 'load-path "~/.emacs.d/local-packages/")
+(load "let-alist-1.0.5.el")
 
 
 ;; ======== WINDOWS SPECIFIC ========
 ;; Set default font
-;(set-face-attribute 'default nil
-;                    :family "Source Code Pro"
-;                    :height 110
-;                    :weight 'normal
-;                    :width 'normal)
+(set-face-attribute 'default nil
+                    :family "Source Code Pro"
+                    :height 108
+                    :weight 'normal
+                    :width 'normal)
 
 
 ;; ======== COUNSEL/IVY/SWIPER ========
@@ -69,18 +74,19 @@
 	'((t . ivy--regex-ignore-order)))
   :bind
   ("C-s" . swiper)
+  ; https://www.reddit.com/r/emacs/comments/6i8rmb/noob_change_ctrlnp_to_vimlike_binding_for_ivy_and/
   (:map ivy-minibuffer-map
+	("C-h" . evil-delete-char) ; supposed to be (kbd "DEL")
 	("C-k" . ivy-previous-line)
 	("C-j" . ivy-next-line)
 	("C-l" . ivy-alt-done)))
 
 
 ;; ======== EVIL MODE ========
-(setq evil-want-C-u-scroll t)
 (use-package evil
   :diminish evil-mode
-;  :init
-;  (setq evil-want-C-u-scroll t)
+  :init
+  (setq evil-want-C-u-scroll t)
   :config
   (evil-mode 1))
     
@@ -98,7 +104,7 @@
     (when (get-buffer "*Completions*") (delete-windows-on "*Completions*"))
     (abort-recursive-edit))) 
 
-;; make esc get me out of different situation
+;; make esc get me out of different situations
 (define-key evil-normal-state-map [escape] 'keyboard-quit)
 (define-key evil-visual-state-map [escape] 'keyboard-quit)
 (define-key minibuffer-local-map [escape] 'minibuffer-keyboard-quit)
@@ -107,6 +113,7 @@
 (define-key minibuffer-local-must-match-map [escape] 'minibuffer-keyboard-quit)
 (define-key minibuffer-local-isearch-map [escape] 'minibuffer-keyboard-quit)
 ;(global-set-key [escape] 'evil-exit-emacs-state)
+
 ;; set c-u to have vim-like behavior (scroll up half page)
 (define-key evil-normal-state-map (kbd "C-u") 'evil-scroll-up)
 (define-key evil-visual-state-map (kbd "C-u") 'evil-scroll-up)
@@ -148,6 +155,15 @@
 (use-package rainbow-delimiters)
 (add-hook 'prog-mode-hook #'rainbow-delimiters-mode)
 
+;; ======== SUBLIMITY ========
+(use-package sublimity)
+;; smooth scrolling
+(require 'sublimity-scroll)
+(sublimity-mode 1)
+
+;; ======== PERSPECTIVE ========
+(use-package perspective)
+(persp-mode)
 
 ;; ======== WHICH-KEY && GENERAL ========
 (use-package which-key :config (which-key-mode 1))
@@ -190,13 +206,27 @@
  "fed" 'open-config-file
  "feR" 'reload-config-file
  "fs" 'save-buffer
+ "fS" 'save-all-buffers
+
+ ;; git
+ "g" '(:ignore t :which-key "Git")
+ "gs" 'magit
 
  ;; help
+ "h" '(:ignore t :which-key "Help")
  "hdf" 'counsel-describe-function
  "hdv" 'counsel-describe-variable
 
  ;; insert
+ "i" '(:ignore t :which-key "Insert")
  "iu" 'counsel-unicode-char
+
+ ;; perspective
+ "l" '(:keymap perspective-map :package perspective :which-key "Layout")
+ 
+ ;; projectile
+ ;; bind p to be the prefix for opening the map of projectile commands
+ "p" '(:keymap projectile-command-map :package projectile :which-key "Project")
  
  ;; search
  "s" '(:ignore t :which-key "Search")
@@ -239,6 +269,18 @@
 (define-key tern-mode-keymap (kbd "M-,") nil)
 
 
+;; ======== YASNIPPET ========
+(use-package yasnippet)
+(yas-global-mode 1)
+;; variable used in helper function to embed yas suggestions in company completion window
+(defvar company-mode/enable-yas t)
+;; snippet sources
+(use-package yasnippet-snippets)
+(use-package php-auto-yasnippets)
+(setq php-auto-yasnippet-php-program "~/.emacs.d/config/Create-PHP-YASnippet.php")
+(define-key php-mode-map (kbd "C-c C-y") 'yas/create-php-snippet)
+
+
 ;; ======== FLYCHECK ========
 (use-package flycheck
   :init (global-flycheck-mode))
@@ -265,13 +307,30 @@
 
 
 ;; ======== SPACELINE =========
-(use-package all-the-icons)
-(use-package spaceline)
-(require 'spaceline-config)
-(use-package spaceline-all-the-icons
-  :after spaceline
-  :config (spaceline-all-the-icons-theme))
-(setq spaceline-all-the-icons-separator-type 'arrow) 
+;(use-package all-the-icons)
+;(use-package spaceline)
+;(require 'spaceline-config)
+;(use-package spaceline-all-the-icons
+;  :after spaceline
+;  :config (spaceline-all-the-icons-theme))
+;(setq spaceline-all-the-icons-separator-type 'arrow) 
+
+
+;; ======== PROJECTILE ========
+(use-package projectile)
+(use-package counsel-projectile)
+(counsel-projectile-mode)
+(setq projectile-enable-caching t)
+;; overwrite default projectile functions with counsel-projectile alternatives
+(define-key projectile-mode-map (kbd "C-c p b") 'counsel-projectile-switch-to-buffer)
+(define-key projectile-mode-map (kbd "C-c p b") 'counsel-projectile-switch-to-buffer)
+(define-key projectile-mode-map (kbd "C-c p d") 'counsel-projectile-find-dir)
+;; currently overwriting projectile-find-file-in-directory (seems pointless)
+(define-key projectile-mode-map (kbd "C-c p l") 'counsel-projectile)
+(define-key projectile-mode-map (kbd "C-c p f") 'counsel-projectile-find-file)
+(define-key projectile-mode-map (kbd "C-c p p") 'counsel-projectile-switch-project)
+(define-key projectile-mode-map (kbd "C-c p s g") 'counsel-projectile-grep)
+(define-key projectile-mode-map (kbd "C-c p s s") 'counsel-projectile-ag)
 
 
 ;; ======== C-MODE ========
@@ -289,13 +348,14 @@
 (use-package js2-refactor)
 (use-package xref-js2)
 (add-hook 'js2-mode-hook #'js2-refactor-mode)
-(js2r-add-keybindings-with-prefix "C-c C-r")
+(js2r-add-keybindings-with-prefix "C-c C-m")
 (define-key js2-mode-map (kbd "C-k") #'js2r-kill)
 
 ;; js-mode (which js2 is based on) binds "M-." which conflicts with xref, so
 ;; unbind it.
 (define-key js-mode-map (kbd "M-.") nil)
 
+;; setup smartparens and flycheck
 (add-hook 'js2-mode-hook #'smartparens-mode)
 (add-hook 'js2-mode-hook #'evil-smartparens-mode)
 (sp-local-pair 'js2-mode "{" nil :post-handlers '((my-create-newline-and-enter-sexp "RET")))
@@ -304,7 +364,7 @@
   (add-hook 'xref-backend-functions #'xref-js2-xref-backend nil t)))
 
 ;; indium
-;;(use-package indium)
+(use-package indium)
 
 
 ;; ======== TYPESCRIPT ==============
@@ -324,10 +384,11 @@
 ;; aligns annotation to the right hand side
 (setq company-tooltip-align-annotations t)
 
-;; enable paredit on mode and initialize
+;; configure smartparens
 (add-hook 'typescript-mode-hook #'smartparens-mode)
 (add-hook 'typescript-mode-hook #'evil-smartparens-mode)
 (sp-local-pair 'typescript-mode "{" nil :post-handlers '((my-create-newline-and-enter-sexp "RET")))
+;; run required configuration function for tide
 (add-hook 'typescript-mode-hook #'setup-tide-mode)
 
 
@@ -343,9 +404,13 @@
              (make-local-variable 'company-backends)
              (add-to-list 'company-backends 'company-ac-php-backend)))
 
+;; configure smartparens
 (add-hook 'php-mode-hook #'smartparens-mode)
 (add-hook 'php-mode-hook #'evil-smartparens-mode)
 (sp-local-pair 'php-mode "{" nil :post-handlers '((my-create-newline-and-enter-sexp "RET")))
+
+;; tool to test HTTP REST webservices
+(use-package restclient)
 
 
 ;; ======== WEB MODE ========
@@ -356,11 +421,48 @@
 (add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
 
 
+;; ======== SQL IDE ========
+(setq sql-mysql-options '("-C" "-t" "-f" "-n"))
+(setq sql-connection-alist
+      '((casesdev (sql-product 'mysql)
+                 (sql-port 3306)
+                 (sql-server "dev.cluster-cpqhbit12kdd.us-east-1.rds.amazonaws.com")
+                 (sql-user "rsnards")
+                 (sql-password "RSNA1915")
+                 (sql-database "case_repository"))
+        (casesstage (sql-product 'mysql)
+                    (sql-port 3306)
+                    (sql-server "stage.cluster-cpqhbit12kdd.us-east-1.rds.amazonaws.com")
+                    (sql-user "rsnards")
+                    (sql-password "RSNA1915")
+                    (sql-database "case_repository"))))
+
+(defun mysql-cases-dev ()
+  "Connect to casesdev database."
+  (interactive)
+  (my-sql-connect 'mysql 'casesdev))
+
+(defun mysql-cases-stage ()
+  "Connect to casesstage database."
+  (interactive)
+  (my-sql-connect 'mysql 'casesstage))
+
+(defun my-sql-connect (product connection)
+  "Connect to custom-defined databases."
+  ;; remember to set sql product, otherwise it will fail for the first time you call the function
+  (setq sql-product product)
+  ;; set path to mysql
+  ;(setq sql-mysql-program "c/Program Files/MySQL/MySQL Workbench 6.3 CE/")
+  (sql-connect connection))
+
 ;; ======== RACKET ========
 (use-package racket-mode)
 (use-package quack)
 (use-package scribble-mode)
 
+
+;; ======== MAGIT ========
+(use-package evil-magit)
 
 
 ;; ======== HELPER FUNCTIONS ======== 
@@ -415,6 +517,20 @@
             (forward-char 1)
           (call-interactively #'self-insert-command))))
 
+(defun company-mode/backend-with-yas (backend)
+  "Integrate yas suggestions into company completion window."
+  (if (or (not company-mode/enable-yas) (and (listp backend) (member 'company-yasnippet backend)))
+      backend
+    (append (if (consp backend) backend (list backend))
+            '(:with company-yasnippet))))
+;; call function to add to company backends
+(setq company-backends (mapcar #'company-mode/backend-with-yas company-backends))
+
+(defun save-all-buffers ()
+  "Save all open buffers."
+  (interactive)
+  (save-some-buffers t))
+
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
@@ -423,12 +539,13 @@
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
    (quote
-    ("3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa" default)))
+    ("9b59e147dbbde5e638ea1cde5ec0a358d5f269d27bd2b893a0947c4a867e14c1" "a8245b7cc985a0610d71f9852e9f2767ad1b852c2bdea6f4aadc12cce9c4d6d0" "8aebf25556399b58091e533e455dd50a6a9cba958cc4ebb0aab175863c25b9a4" "3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa" default)))
  '(js-indent-level 2)
  '(js2-bounce-indent-p t)
+ '(linum-format " %5i ")
  '(package-selected-packages
    (quote
-    (ac-php company-php php-mode evil-cleverparens evil-smartparens smartparens tide indium js2-mode smart-mode-line sublime-themes counsel general evil)))
+    (solarized-theme evil-magit ac-php company-php php-mode evil-cleverparens evil-smartparens smartparens tide indium js2-mode smart-mode-line sublime-themes counsel general evil)))
  '(sp-highlight-pair-overlay nil))
 
 (custom-set-faces
