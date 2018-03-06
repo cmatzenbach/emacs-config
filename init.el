@@ -50,14 +50,14 @@
 
 ;; ======== WINDOWS SPECIFIC ========
 ;; Set default font
-(set-face-attribute 'default nil
-                    :family "Source Code Pro"
-                    :height 110
-                    :weight 'normal
-                    :width 'normal)
+;(set-face-attribute 'default nil
+;                    :family "Source Code Pro"
+;                    :height 110
+;                    :weight 'normal
+;                    :width 'normal)
 
 
-;; ======== COUNSELIVY/SWIPER ========
+;; ======== COUNSEL/IVY/SWIPER ========
 (use-package counsel
   :diminish ivy-mode
   :config
@@ -76,10 +76,11 @@
 
 
 ;; ======== EVIL MODE ========
+(setq evil-want-C-u-scroll t)
 (use-package evil
   :diminish evil-mode
-  :init
-  (setq evil-want-C-u-scroll t)
+;  :init
+;  (setq evil-want-C-u-scroll t)
   :config
   (evil-mode 1))
     
@@ -97,6 +98,7 @@
     (when (get-buffer "*Completions*") (delete-windows-on "*Completions*"))
     (abort-recursive-edit))) 
 
+;; make esc get me out of different situation
 (define-key evil-normal-state-map [escape] 'keyboard-quit)
 (define-key evil-visual-state-map [escape] 'keyboard-quit)
 (define-key minibuffer-local-map [escape] 'minibuffer-keyboard-quit)
@@ -105,6 +107,13 @@
 (define-key minibuffer-local-must-match-map [escape] 'minibuffer-keyboard-quit)
 (define-key minibuffer-local-isearch-map [escape] 'minibuffer-keyboard-quit)
 ;(global-set-key [escape] 'evil-exit-emacs-state)
+;; set c-u to have vim-like behavior (scroll up half page)
+(define-key evil-normal-state-map (kbd "C-u") 'evil-scroll-up)
+(define-key evil-visual-state-map (kbd "C-u") 'evil-scroll-up)
+(define-key evil-insert-state-map (kbd "C-u")
+  (lambda ()
+    (interactive)
+    (evil-delete (point-at-bol) (point))))
 
 ;; map fd to escape normal mode
 (require 'key-chord) 
@@ -114,29 +123,30 @@
 (use-package evil-surround
   :config
   (global-evil-surround-mode))
+;; or does this ^ need a t after it? global-evil-surround-mode t
 
 
-;; ======== EVIL-SURROUND ========
-(use-package evil-surround
-  :config
-  (global-evil-surround-mode 1))
-
-;; ======== (EVIL) SMARTPARENS ========
+;; ======== INDENTATION/BRACKET MANAGEMENT ========
+;; evil-smartparens
 (use-package smartparens)
 (require 'smartparens-config)
 (show-smartparens-global-mode +1)
 (define-key smartparens-mode-map (kbd ")") #'sp-paredit-like-close-round)
 (use-package evil-smartparens)
 
-;; ======== EVIL-CLEVERPARENS ========
+;; evil-cleverparens
 (use-package evil-cleverparens)
 (add-hook 'elisp-mode #'smartparens-mode)
 (add-hook 'elisp-mode #'evil-cleverparens-mode)
 
-;; ======== EDITORCONFIG ========
+;; make emacs recognize .editorconfig files
 (use-package editorconfig
   :config
   (editorconfig-mode 1))
+
+;; rainbow delimiters, a godsend for lisps and shitty es5 callback stacks from hell
+(use-package rainbow-delimiters)
+(add-hook 'prog-mode-hook #'rainbow-delimiters-mode)
 
 
 ;; ======== WHICH-KEY && GENERAL ========
@@ -152,6 +162,7 @@
  "'" 'new-eshell
  ;"?" '(eshell- -goto-filedir-or-home :which-key "iterm - goto dir")
  "TAB" 'switch-to-previous-buffer
+ "M-x" 'counsel-M-x ;; gives M-x command counsel features
 
  ;; applications
  "a" '(:ignore t :which-key "Applications")
@@ -162,6 +173,7 @@
  "b" '(:ignore t :which-key "Buffers")
  "bb" 'ivy-switch-buffer
  "bd" 'kill-this-buffer
+ "bD" 'kill-buffer-and-window
  "bn" 'next-buffer
  "bp" 'previous-buffer
 
@@ -173,11 +185,19 @@
  ;; files
  "f" '(:ignore t :which-key "Files")
  "ff" 'counsel-find-file
+ "fl" 'counsel-find-library
  "fr" 'counsel-recentf
  "fed" 'open-config-file
  "feR" 'reload-config-file
  "fs" 'save-buffer
 
+ ;; help
+ "hdf" 'counsel-describe-function
+ "hdv" 'counsel-describe-variable
+
+ ;; insert
+ "iu" 'counsel-unicode-char
+ 
  ;; search
  "s" '(:ignore t :which-key "Search")
  "sg" 'counsel-git-grep
@@ -245,18 +265,19 @@
 
 
 ;; ======== SPACELINE =========
-;(use-package all-the-icons)
-;(use-package spaceline)
-;(require 'spaceline-config)
-;(use-package spaceline-all-the-icons
-;  :after spaceline
-;  :config (spaceline-all-the-icons-theme))
-;(setq spaceline-all-the-icons-separator-type 'arrow) 
+(use-package all-the-icons)
+(use-package spaceline)
+(require 'spaceline-config)
+(use-package spaceline-all-the-icons
+  :after spaceline
+  :config (spaceline-all-the-icons-theme))
+(setq spaceline-all-the-icons-separator-type 'arrow) 
 
 
 ;; ======== C-MODE ========
 (add-hook 'c-mode-hook #'evil-smartparens-mode)
 (sp-local-pair 'c-mode "{" nil :post-handlers '((my-create-newline-and-enter-sexp "RET")))
+
 
 ;; ======== JAVASCRIPT ========
 (use-package js2-mode)
@@ -335,6 +356,13 @@
 (add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
 
 
+;; ======== RACKET ========
+(use-package racket-mode)
+(use-package quack)
+(use-package scribble-mode)
+
+
+
 ;; ======== HELPER FUNCTIONS ======== 
 (defun open-config-file()
   (interactive)
@@ -345,11 +373,18 @@
   (load-file "~/.emacs.d/init.el"))
 
 (defun new-eshell ()
+  "Create a new instance of eshell in a window split."
   (interactive)
   (let* ((lines (window-body-height))
          (new-window (split-window-vertically (floor (* 0.7 lines)))))
     (select-window new-window)
     (eshell "eshell"))) 
+
+(defun kill-buffer-and-window ()
+  "Kill buffer and window."
+  (interactive)
+  (kill-this-buffer)
+  (evil-window-delete))
 
 (defun enable-paredit-nonlisp ()
   "Turn on paredit mode for non-lisps."
@@ -365,14 +400,14 @@
   (switch-to-buffer (other-buffer (current-buffer) 1)))
 
 (defun my-create-newline-and-enter-sexp (&rest _ignored)
-  "Open a new brace or bracket expression, with relevant newlines and indent"
+  "Open a new brace or bracket expression, with relevant newlines and indent."
   (newline)
   (indent-according-to-mode)
   (forward-line -1)
   (indent-according-to-mode))
 
 (defun sp-paredit-like-close-round ()
-      "If the next character is a closing character as according to smartparens skip it, otherwise insert `last-input-event'"
+      "If the next character is a closing character as according to smartparens skip it, otherwise insert `last-input-event'."
       (interactive)
       (let ((pt (point)))
         (if (and (< pt (point-max))
