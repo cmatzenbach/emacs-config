@@ -238,8 +238,12 @@
 
  ;; help
  "h" '(:ignore t :which-key "Help")
- "hdf" 'counsel-describe-function
- "hdv" 'counsel-describe-variable
+ "hc" 'helpful-command
+ "hf" 'helpful-callable
+ "hk" 'helpful-describe-key
+ "hm" 'helpful-macro
+ "hp" 'helpful-at-point
+ "hv" 'helpful-variable
 
  ;; insert
  "i" '(:ignore t :which-key "Insert")
@@ -505,6 +509,10 @@
 
 ;; ======== MAGIT ========
 (use-package evil-magit)
+
+
+;; ======== HELPFUL ========
+(use-package helpful)
 
 
 ;; ======== HELPER FUNCTIONS ======== 
