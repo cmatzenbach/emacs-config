@@ -54,11 +54,11 @@
 
 ;; ======== WINDOWS SPECIFIC ========
 ;; Set default font
-;(set-face-attribute 'default nil
-;                    :family "Source Code Pro"
-;                    :height 108
-;                    :weight 'normal
-;                    :width 'normal)
+(set-face-attribute 'default nil
+                    :family "Source Code Pro"
+                    :height 108
+                    :weight 'normal
+                    :width 'normal)
 
 
 ;; ======== COUNSEL/IVY/SWIPER ========
@@ -150,8 +150,6 @@
 
 ;; evil-cleverparens
 (use-package evil-cleverparens)
-(add-hook 'elisp-mode #'smartparens-mode)
-(add-hook 'elisp-mode #'evil-cleverparens-mode)
 
 ;; make emacs recognize .editorconfig files
 (use-package editorconfig
@@ -171,6 +169,25 @@
 ;; ======== PERSPECTIVE ========
 (use-package perspective)
 (persp-mode)
+
+;; ======== AVY ========
+(use-package avy
+  :config
+  (avy-setup-default))
+
+;; ======== TARGETS.EL ========
+(use-package targets
+  :load-path "~/.emacs.d/local-packages/targets.el"
+  :init
+  (setq targets-user-text-objects '((pipe "|" nil separator)
+                                    (paren "(" ")" pair :more-keys "b")
+                                    (bracket "[" "]" pair :more-keys "r")
+                                    (curly "{" "}" pair :more-keys "c")))
+  :config
+  (targets-setup t
+                 :inside-key "i"
+                 :around-key "a"
+                 :remote-key nil))
 
 ;; ======== WHICH-KEY && GENERAL ========
 (use-package which-key :config (which-key-mode 1))
@@ -227,6 +244,13 @@
  ;; insert
  "i" '(:ignore t :which-key "Insert")
  "iu" 'counsel-unicode-char
+
+ ;; jump
+ "j" '(:ignore t :which-key "Jump")
+ "jc" 'avy-goto-char-timer
+ "jl" 'avy-goto-line
+ "jq" 'avy-goto-word-1
+ "jw" 'avy-goto-word-0
 
  ;; perspective
  "l" '(:keymap perspective-map :package perspective :which-key "Layout")
@@ -314,13 +338,13 @@
 
 
 ;; ======== SPACELINE =========
-(use-package all-the-icons)
-(use-package spaceline)
-(require 'spaceline-config)
-(use-package spaceline-all-the-icons
-  :after spaceline
-  :config (spaceline-all-the-icons-theme))
-(setq spaceline-all-the-icons-separator-type 'arrow) 
+;(use-package all-the-icons)
+;(use-package spaceline)
+;(require 'spaceline-config)
+;(use-package spaceline-all-the-icons
+;  :after spaceline
+;  :config (spaceline-all-the-icons-theme))
+;(setq spaceline-all-the-icons-separator-type 'arrow) 
 
 
 ;; ======== PROJECTILE ========
@@ -429,7 +453,9 @@
 
 
 ;; ======== SQL IDE ========
+;; windows only - fix to make emacs+mysql work
 (setq sql-mysql-options '("-C" "-t" "-f" "-n"))
+;; set up connection list
 (setq sql-connection-alist
       '((casesdev (sql-product 'mysql)
                  (sql-port 3306)
@@ -458,9 +484,12 @@
   "Connect to custom-defined databases."
   ;; remember to set sql product, otherwise it will fail for the first time you call the function
   (setq sql-product product)
-  ;; set path to mysql
-  ;(setq sql-mysql-program "c/Program Files/MySQL/MySQL Workbench 6.3 CE/")
   (sql-connect connection))
+
+
+;; ======== ELISP ========
+(add-hook 'emacs-lisp-mode-hook #'smartparens-mode)
+(add-hook 'emacs-lisp-mode-hook #'evil-cleverparens-mode)
 
 
 ;; ======== RACKET ========
@@ -470,8 +499,8 @@
 (use-package scribble-mode)
 
 ;; setup smartparens and cleverparens
-(add-hook 'racket-mode #'smartparens-mode)
-(add-hook 'racket-mode #'evil-cleverparens-mode)
+(add-hook 'racket-mode-hook #'smartparens-mode)
+(add-hook 'racket-mode-hook #'evil-cleverparens-mode)
 
 
 ;; ======== MAGIT ========
