@@ -47,7 +47,6 @@
 
 ;; load custom config modules
 (load-user-file "appearance.el")
-(load-user-file "evil-evilified-state.el")
 ;; load manually installed local packages
 (add-to-list 'load-path "~/.emacs.d/local-packages/")
 (load "let-alist-1.0.5.el")
@@ -55,11 +54,11 @@
 
 ;; ======== WINDOWS SPECIFIC ========
 ;; Set default font
-(set-face-attribute 'default nil
-                    :family "Source Code Pro"
-                    :height 108
-                    :weight 'normal
-                    :width 'normal)
+;(set-face-attribute 'default nil
+;                    :family "Source Code Pro"
+;                    :height 108
+;                    :weight 'normal
+;                    :width 'normal)
 
 
 ;; ======== COUNSEL/IVY/SWIPER ========
@@ -87,10 +86,18 @@
   :diminish evil-mode
   :init
   (setq evil-want-C-u-scroll t)
+  (setq evil-want-integration nil)
   :config
   (evil-mode 1))
     
+;; evil-collection - WIP package to create evil keybindings for missing modes
+(use-package evil-collection
+  :after evil
+  :config
+  (evil-collection-init))
+
 ;; load evil-evilified-state (from author of spacemacs)
+(load-user-file "evil-evilified-state.el")
 (require 'evil-evilified-state)
 
 ;; use esc to exit minibuffer
@@ -307,13 +314,13 @@
 
 
 ;; ======== SPACELINE =========
-;(use-package all-the-icons)
-;(use-package spaceline)
-;(require 'spaceline-config)
-;(use-package spaceline-all-the-icons
-;  :after spaceline
-;  :config (spaceline-all-the-icons-theme))
-;(setq spaceline-all-the-icons-separator-type 'arrow) 
+(use-package all-the-icons)
+(use-package spaceline)
+(require 'spaceline-config)
+(use-package spaceline-all-the-icons
+  :after spaceline
+  :config (spaceline-all-the-icons-theme))
+(setq spaceline-all-the-icons-separator-type 'arrow) 
 
 
 ;; ======== PROJECTILE ========
@@ -455,10 +462,16 @@
   ;(setq sql-mysql-program "c/Program Files/MySQL/MySQL Workbench 6.3 CE/")
   (sql-connect connection))
 
+
 ;; ======== RACKET ========
 (use-package racket-mode)
+(add-to-list 'auto-mode-alist '("\\.rkt\\'" . racket-mode)) 
 (use-package quack)
 (use-package scribble-mode)
+
+;; setup smartparens and cleverparens
+(add-hook 'racket-mode #'smartparens-mode)
+(add-hook 'racket-mode #'evil-cleverparens-mode)
 
 
 ;; ======== MAGIT ========
@@ -545,7 +558,7 @@
  '(linum-format " %5i ")
  '(package-selected-packages
    (quote
-    (solarized-theme evil-magit ac-php company-php php-mode evil-cleverparens evil-smartparens smartparens tide indium js2-mode smart-mode-line sublime-themes counsel general evil)))
+    (evil-collection solarized-theme evil-magit ac-php company-php php-mode evil-cleverparens evil-smartparens smartparens tide indium js2-mode smart-mode-line sublime-themes counsel general evil)))
  '(sp-highlight-pair-overlay nil))
 
 (custom-set-faces
