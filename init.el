@@ -493,7 +493,9 @@
 
 ;; ======== ELISP ========
 (add-hook 'emacs-lisp-mode-hook #'smartparens-mode)
+(add-hook 'emacs-lisp-mode-hook #'smartparens-strict-mode)
 (add-hook 'emacs-lisp-mode-hook #'evil-cleverparens-mode)
+(add-hook 'emacs-lisp-mode-hook 'highlight-defined-mode)
 
 
 ;; ======== RACKET ========
@@ -504,6 +506,7 @@
 
 ;; setup smartparens and cleverparens
 (add-hook 'racket-mode-hook #'smartparens-mode)
+(add-hook 'racket-mode-hook #'smartparens-strict-mode)
 (add-hook 'racket-mode-hook #'evil-cleverparens-mode)
 
 
@@ -513,6 +516,18 @@
 
 ;; ======== HELPFUL ========
 (use-package helpful)
+
+
+;; ======== THEMES/COLOR MODS ========
+;; theme packages
+(use-package kaolin-themes)
+
+;; additional syntax highlighting
+;; highlights elisp symbols
+(use-package highlight-defined)
+;; highlights numbers
+(use-package highlight-numbers)
+(add-hook 'prog-mode-hook 'highlight-numbers-mode)
 
 
 ;; ======== HELPER FUNCTIONS ======== 
