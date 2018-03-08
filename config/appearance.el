@@ -18,4 +18,17 @@
 )
 
 ;; set solarized-dark colorscheme
-(when (display-graphic-p) (load-theme 'brin t)) 
+;(when (display-graphic-p) (load-theme 'brin t)) 
+
+(cond
+ ((string-equal system-type "windows-nt")
+  (progn
+    (load-theme 'challenger-deep t)
+    (set-face-attribute 'default nil
+                    :family "Fira Code"
+                    :height 108
+                    :weight 'normal
+                    :width 'normal)))
+ ((string-equal system-type "gnu/linux")
+  (progn
+    (load-theme 'brin t))))

@@ -50,15 +50,18 @@
 ;; load manually installed local packages
 (add-to-list 'load-path "~/.emacs.d/local-packages/")
 (load "let-alist-1.0.5.el")
+(load "highlight-escape-sequences.el")
+(load "highlight-quoted.el")
 
 
 ;; ======== WINDOWS SPECIFIC ========
 ;; Set default font
-(set-face-attribute 'default nil
-                    :family "Source Code Pro"
-                    :height 108
-                    :weight 'normal
-                    :width 'normal)
+;(set-face-attribute 'default nil
+;                    :family "Source Code Pro"
+;                    :height 108
+;                    :weight 'normal
+;                    :width 'normal)
+;(load-theme 'challenger-deep t)
 
 
 ;; ======== COUNSEL/IVY/SWIPER ========
@@ -357,14 +360,83 @@
 
 
 ;; ======== SPACELINE =========
-;(use-package all-the-icons)
+(use-package all-the-icons)
+;; fix for lag on windows when using all-the-icons
+(when (string-equal system-type "windows-nt") (setq inhibit-compacting-font-caches t))
 ;(use-package spaceline)
 ;(require 'spaceline-config)
 ;(use-package spaceline-all-the-icons
 ;  :after spaceline
 ;  :config (spaceline-all-the-icons-theme))
 ;(setq spaceline-all-the-icons-separator-type 'arrow) 
+  (use-package powerline
+    :ensure t
+    :config
 
+    (defun make-rect (color height width)
+      "Create an XPM bitmap."
+      (when window-system
+        (propertize
+         " " 'display
+         (let ((data nil)
+               (i 0))
+           (setq data (make-list height (make-list width 1)))
+           (pl/make-xpm "percent" color color (reverse data))))))
+
+
+    (defun powerline-mode-icon ()
+      (let ((icon (all-the-icons-icon-for-buffer)))
+        (unless (symbolp icon) ;; This implies it's the major mode
+          (format " %s"
+                  (propertize icon
+                              'help-echo (format "Major-mode: `%s`" major-mode)
+                              'face `(:height 1.2 :family ,(all-the-icons-icon-family-for-buffer)))))))
+
+
+    (setq-default mode-line-format 
+                  '("%e"
+                    (:eval
+                     (let* ((active (powerline-selected-window-active))
+                            (modified (buffer-modified-p))
+                            (face1 (if active 'powerline-active1 'powerline-inactive1))
+                            (face2 (if active 'powerline-active2 'powerline-inactive2))
+                            (bar-color (cond ((and active modified) (face-foreground 'error))
+                                             (active (face-background 'cursor))
+                                             (t (face-background 'tooltip))))
+                            (lhs (list
+                                  (make-rect bar-color 30 3)
+                                  (when modified
+                                    (concat
+                                     " "
+                                     (all-the-icons-faicon "floppy-o"
+                                                           :face (when active 'error)
+                                                           :v-adjust -0.01)))
+                                  " "
+                                  (powerline-buffer-id)
+                                  ))
+                            (center (list
+                                     " "
+                                     (powerline-mode-icon)
+                                     " "
+                                     (powerline-major-mode)
+                                     " "))
+                            (rhs (list
+                                  (format "%s" (eyebrowse--get 'current-slot))
+                                  " | "
+                                  (powerline-raw "%l:%c" 'mode-line 'r)
+                                  " | "
+                                  (powerline-raw "%6p" 'mode-line 'r)
+                                  (powerline-hud 'highlight 'region 1)
+                                  " "
+                                  ))
+                            )
+                       (concat
+                        (powerline-render lhs)
+                        (powerline-fill-center face1 (/ (powerline-width center) 2.0))
+                        (powerline-render center)
+                        (powerline-fill face2 (powerline-width rhs))
+                        (powerline-render rhs))))))
+    )
 
 ;; ======== PROJECTILE ========
 (use-package projectile)
@@ -510,7 +582,9 @@
 (add-hook 'emacs-lisp-mode-hook #'smartparens-mode)
 (add-hook 'emacs-lisp-mode-hook #'smartparens-strict-mode)
 (add-hook 'emacs-lisp-mode-hook #'evil-cleverparens-mode)
-(add-hook 'emacs-lisp-mode-hook 'highlight-defined-mode)
+(add-hook 'emacs-lisp-mode-hook #'highlight-defined-mode)
+;; minor mode for highlighting lisp quotes and quoted symbols (locally installed package)
+(add-hook 'emacs-lisp-mode-hook #'highlight-quoted-mode)
 
 ;; testing - suggest.el https://github.com/Wilfred/suggest.el
 (use-package suggest)
@@ -526,7 +600,7 @@
 (add-hook 'racket-mode-hook #'smartparens-mode)
 (add-hook 'racket-mode-hook #'smartparens-strict-mode)
 (add-hook 'racket-mode-hook #'evil-cleverparens-mode)
-
+(add-hook 'racket-mode-hook #'highlight-quoted-mode)
 
 ;; ======== MAGIT ========
 (use-package evil-magit)
@@ -538,15 +612,23 @@
 
 ;; ======== THEMES/COLOR MODS ========
 ;; theme packages
-(use-package kaolin-themes)
-(use-package afternoon-theme)
-(use-package gruvbox-theme)
+;(use-package kaolin-themes)
+;(use-package afternoon-theme)
+;(use-package gruvbox-theme)
+;(use-package nord-theme)
+;(use-package oceanic-theme)
+;(use-package liso-theme)
+;(use-package challenger-deep-theme)
+;(use-package creamsody-theme)
+;(use-package material-theme)
 
 ;; additional syntax highlighting
 ;; highlights elisp symbols
 (use-package highlight-defined)
 ;; highlights numbers
 (use-package highlight-numbers)
+;; activate highlight-escape-sequences mode (locally installed package)
+(hes-mode)
 (add-hook 'prog-mode-hook 'highlight-numbers-mode)
 
 
@@ -624,13 +706,13 @@
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
    (quote
-    ("9b59e147dbbde5e638ea1cde5ec0a358d5f269d27bd2b893a0947c4a867e14c1" "a8245b7cc985a0610d71f9852e9f2767ad1b852c2bdea6f4aadc12cce9c4d6d0" "8aebf25556399b58091e533e455dd50a6a9cba958cc4ebb0aab175863c25b9a4" "3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa" default)))
+    ("dcb9fd142d390bb289fee1d1bb49cb67ab7422cd46baddf11f5c9b7ff756f64c" "28ec8ccf6190f6a73812df9bc91df54ce1d6132f18b4c8fcc85d45298569eb53" "7f6796a9b925f727bbe1781dc65f7f23c0aa4d4dc19613aa3cf96e41a96651e4" "50b66fad333100cc645a27ada899a7b1d44f1ceb32140ab8e88fedabfb7d0daf" "fec6c786b1d3088091715772839ac6051ed972b17991af04b50e9285a98c7463" "8ad35d6c2b35eacc328b732f0a4fe263abd96443a5075aa53b8535a9e8cb7eaf" "9a58c408a001318ce9b4eab64c620c8e8ebd55d4c52327e354f24d298fb6978f" "a9d2ed6e4266ea7f8c1f4a0d1af34a6282ad6ff91754bee5ec7c3b260ec721f4" "293b55c588c56fe062afe4b7a3a4b023712a26d26dc69ee89c347b30283a72eb" "9b59e147dbbde5e638ea1cde5ec0a358d5f269d27bd2b893a0947c4a867e14c1" "a8245b7cc985a0610d71f9852e9f2767ad1b852c2bdea6f4aadc12cce9c4d6d0" "8aebf25556399b58091e533e455dd50a6a9cba958cc4ebb0aab175863c25b9a4" "3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa" default)))
  '(js-indent-level 2)
  '(js2-bounce-indent-p t)
  '(linum-format " %5i ")
  '(package-selected-packages
    (quote
-    (eyebrowse evil-collection solarized-theme evil-magit ac-php company-php php-mode evil-cleverparens evil-smartparens smartparens tide indium js2-mode smart-mode-line sublime-themes counsel general evil)))
+    (nord-theme eyebrowse evil-collection solarized-theme evil-magit ac-php company-php php-mode evil-cleverparens evil-smartparens smartparens tide indium js2-mode smart-mode-line sublime-themes counsel general evil)))
  '(sp-highlight-pair-overlay nil))
 
 (custom-set-faces
