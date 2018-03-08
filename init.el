@@ -167,8 +167,13 @@
 (sublimity-mode 1)
 
 ;; ======== PERSPECTIVE ========
-(use-package perspective)
+(use-package persp-mode)
 (persp-mode)
+
+;; ======== EYEBROWSE ========
+(use-package eyebrowse
+  :init
+  (eyebrowse-mode))
 
 ;; ======== AVY ========
 (use-package avy
@@ -257,7 +262,17 @@
  "jw" 'avy-goto-word-0
 
  ;; perspective
- "l" '(:keymap perspective-map :package perspective :which-key "Layout")
+ "l" '(:keymap persp-key-map :package persp-mode :which-key "Layout")
+ "l0" 'eyebrowse-switch-to-window-config-0
+ "l1" 'eyebrowse-switch-to-window-config-1
+ "l2" 'eyebrowse-switch-to-window-config-2
+ "l3" 'eyebrowse-switch-to-window-config-3
+ "l4" 'eyebrowse-switch-to-window-config-4
+ "l5" 'eyebrowse-switch-to-window-config-5
+ "l6" 'eyebrowse-switch-to-window-config-6
+ "l7" 'eyebrowse-switch-to-window-config-7
+ "l8" 'eyebrowse-switch-to-window-config-8
+ "l9" 'eyebrowse-switch-to-window-config-9
  
  ;; projectile
  ;; bind p to be the prefix for opening the map of projectile commands
@@ -497,6 +512,9 @@
 (add-hook 'emacs-lisp-mode-hook #'evil-cleverparens-mode)
 (add-hook 'emacs-lisp-mode-hook 'highlight-defined-mode)
 
+;; testing - suggest.el https://github.com/Wilfred/suggest.el
+(use-package suggest)
+
 
 ;; ======== RACKET ========
 (use-package racket-mode)
@@ -521,6 +539,8 @@
 ;; ======== THEMES/COLOR MODS ========
 ;; theme packages
 (use-package kaolin-themes)
+(use-package afternoon-theme)
+(use-package gruvbox-theme)
 
 ;; additional syntax highlighting
 ;; highlights elisp symbols
@@ -610,7 +630,7 @@
  '(linum-format " %5i ")
  '(package-selected-packages
    (quote
-    (evil-collection solarized-theme evil-magit ac-php company-php php-mode evil-cleverparens evil-smartparens smartparens tide indium js2-mode smart-mode-line sublime-themes counsel general evil)))
+    (eyebrowse evil-collection solarized-theme evil-magit ac-php company-php php-mode evil-cleverparens evil-smartparens smartparens tide indium js2-mode smart-mode-line sublime-themes counsel general evil)))
  '(sp-highlight-pair-overlay nil))
 
 (custom-set-faces
