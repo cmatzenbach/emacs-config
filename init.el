@@ -54,16 +54,6 @@
 (load "highlight-quoted.el")
 
 
-;; ======== WINDOWS SPECIFIC ========
-;; Set default font
-;(set-face-attribute 'default nil
-;                    :family "Source Code Pro"
-;                    :height 108
-;                    :weight 'normal
-;                    :width 'normal)
-;(load-theme 'challenger-deep t)
-
-
 ;; ======== COUNSEL/IVY/SWIPER ========
 (use-package counsel
   :diminish ivy-mode
@@ -370,7 +360,6 @@
 ;  :config (spaceline-all-the-icons-theme))
 ;(setq spaceline-all-the-icons-separator-type 'arrow) 
   (use-package powerline
-    :ensure t
     :config
 
     (defun make-rect (color height width)
@@ -541,6 +530,9 @@
 (add-to-list 'auto-mode-alist '("\\.tpl\\.php\\'" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.html\\.twig\\'" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
+
+(add-hook 'web-mode-hook #'smartparens-mode)
+(add-hook 'web-mode-hook #'evil-smartparens-mode)
 
 
 ;; ======== SQL IDE ========

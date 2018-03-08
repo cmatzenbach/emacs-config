@@ -27,7 +27,7 @@
     (set-face-attribute 'default nil
                     :family "Fira Code"
                     :height 108
-                    :weight 'normal
+                    :weight 'semi-bold
                     :width 'normal)))
  ((string-equal system-type "gnu/linux")
   (progn
