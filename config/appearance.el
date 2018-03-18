@@ -31,4 +31,9 @@
                     :width 'normal)))
  ((string-equal system-type "gnu/linux")
   (progn
-    (load-theme 'brin t))))
+    (load-theme 'brin t)
+    (set-face-attribute 'default nil
+                        :family "Hack"
+                        :height 120
+                        :weight 'normal
+                        :width 'normal))))

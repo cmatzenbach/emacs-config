@@ -360,6 +360,7 @@
 ;  :config (spaceline-all-the-icons-theme))
 ;(setq spaceline-all-the-icons-separator-type 'arrow) 
   (use-package powerline
+    :ensure t
     :config
 
     (defun make-rect (color height width)
@@ -421,9 +422,10 @@
                             )
                        (concat
                         (powerline-render lhs)
-                        (powerline-fill-center face1 (/ (powerline-width center) 2.0))
+                        ;; changed bg color - variables changed from face1/face2 to bar-color 
+                        (powerline-fill-center bar-color (/ (powerline-width center) 1.0)) ;;changed from 2.0 - seems to center better on yoga3
                         (powerline-render center)
-                        (powerline-fill face2 (powerline-width rhs))
+                        (powerline-fill bar-color (powerline-width rhs))
                         (powerline-render rhs))))))
     )
 
@@ -584,9 +586,9 @@
 
 ;; ======== RACKET ========
 (use-package racket-mode)
-(add-to-list 'auto-mode-alist '("\\.rkt\\'" . racket-mode)) 
 (use-package quack)
 (use-package scribble-mode)
+(add-to-list 'auto-mode-alist '("\\.rkt\\'" . racket-mode)) 
 
 ;; setup smartparens and cleverparens
 (add-hook 'racket-mode-hook #'smartparens-mode)
