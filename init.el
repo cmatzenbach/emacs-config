@@ -22,6 +22,10 @@
 (setq-default tab-width 2)
 ;; avoid having to answer "yes" and "no" every time - change to "y" and "n"
 (defalias 'yes-or-no-p 'y-or-n-p)
+;; keep fringes clean
+(setq-default indicate-empty-lines nil)
+;; no more ugly line splitting
+(setq-default truncate-lines t)
 
 (require 'package)
 (setq package-enable-at-startup nil)
@@ -202,6 +206,7 @@
  ;"?" '(eshell- -goto-filedir-or-home :which-key "iterm - goto dir")
  "TAB" 'switch-to-previous-buffer
  "M-x" 'counsel-M-x ;; gives M-x command counsel features
+ ";" 'comment-dwim
 
  ;; applications
  "a" '(:ignore t :which-key "Applications")
@@ -312,6 +317,11 @@
 (define-key tern-mode-keymap (kbd "M-.") nil)
 (define-key tern-mode-keymap (kbd "M-,") nil)
 
+;; Company Quickhelp
+;; adds documentation pop-ups to company-mode
+(use-package company-quickhelp)
+(company-quickhelp-mode)
+
 
 ;; ======== YASNIPPET ========
 (use-package yasnippet)
@@ -414,9 +424,9 @@
                             (rhs (list
                                   (format "%s" (eyebrowse--get 'current-slot))
                                   " | "
-                                  (powerline-raw "%l:%c" 'mode-line 'r)
+                                  (powerline-raw "%l:%c" 'face1 'r)
                                   " | "
-                                  (powerline-raw "%6p" 'mode-line 'r)
+                                  (powerline-raw "%6p" 'face1 'r)
                                   (powerline-hud 'highlight 'region 1)
                                   " "
                                   ))
@@ -707,7 +717,7 @@
  '(linum-format " %5i ")
  '(package-selected-packages
    (quote
-    (nord-theme eyebrowse evil-collection solarized-theme evil-magit ac-php company-php php-mode evil-cleverparens evil-smartparens smartparens tide indium js2-mode smart-mode-line sublime-themes counsel general evil)))
+    (magit nord-theme eyebrowse evil-collection solarized-theme evil-magit ac-php company-php php-mode evil-cleverparens evil-smartparens smartparens tide indium js2-mode smart-mode-line sublime-themes counsel general evil)))
  '(sp-highlight-pair-overlay nil))
 
 (custom-set-faces
