@@ -19,6 +19,7 @@
 (scroll-bar-mode -1)
 (tool-bar-mode -1)
 (setq-default indent-tabs-mode nil)     ; use spaces instead of tabs
+(setq-default tab-width 2)
 ;; avoid having to answer "yes" and "no" every time - change to "y" and "n"
 (defalias 'yes-or-no-p 'y-or-n-p)
 
