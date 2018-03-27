@@ -1,4 +1,4 @@
-;; sane defaults
+;; ======== SANE DEFAULTS ========
 (setq delete-old-versions -1 )		; delete excess backup versions silently
 (setq version-control t )		; use version control
 (setq vc-make-backup-files t )		; make backups file even when in version controlled dir
@@ -27,6 +27,20 @@
 ;; no more ugly line splitting
 (setq-default truncate-lines t)
 
+
+;; ======== HISTORY ========
+(setq savehist-file "~/.emacs.d/savehist")
+(savehist-mode 1)
+(setq history-length t)
+(setq history-delete-duplicates t)
+(setq savehist-save-minibuffer-history 1)
+(setq savehist-additional-variables
+      '(kill-ring
+        search-ring
+        regexp-search-ring))
+
+
+;; ======== PACKAGE SETUP/USE-PACKAGE ========
 (require 'package)
 (setq package-enable-at-startup nil)
 (setq package-archives '(("melpa". "http://melpa.org/packages/")
@@ -43,6 +57,8 @@
 (require 'use-package)
 (setq use-package-always-ensure t)
 
+
+;; ======== LOCAL CONFIG FILES ========
 (defconst user-config-dir "~/.emacs.d/config/")
 
 (defun load-user-file (file)
@@ -228,11 +244,13 @@
 
  ;; files
  "f" '(:ignore t :which-key "Files")
+ "fD" 'delete-current-buffer-file
  "ff" 'counsel-find-file
  "fl" 'counsel-find-library
  "fr" 'counsel-recentf
  "fed" 'open-config-file
  "feR" 'reload-config-file
+ "fr" 'rename-current-buffer-file
  "fs" 'save-buffer
  "fS" 'save-all-buffers
 
@@ -256,8 +274,11 @@
  ;; jump
  "j" '(:ignore t :which-key "Jump")
  "jc" 'avy-goto-char-timer
+ "jd" 'move-line-down
  "jl" 'avy-goto-line
+ "jn" 'collapse-next-line
  "jq" 'avy-goto-word-1
+ "ju" 'move-line-up
  "jw" 'avy-goto-word-0
 
  ;; perspective
@@ -288,6 +309,7 @@
  "wj" 'evil-window-down
  "wk" 'evil-window-up
  "wl" 'evil-window-right
+ "wr" 'rotate-windows
  "w/" 'evil-window-vsplit
  "w-" 'evil-window-split
  ) 
@@ -324,7 +346,8 @@
 
 
 ;; ======== YASNIPPET ========
-(use-package yasnippet)
+(use-package yasnippet
+  :diminish yas-minor-mode)
 (yas-global-mode 1)
 ;; variable used in helper function to embed yas suggestions in company completion window
 (defvar company-mode/enable-yas t)
@@ -464,15 +487,18 @@
 
 ;; ======== JAVASCRIPT ========
 (use-package js2-mode)
-(add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode)) 
+(add-to-list 'auto-mode-alist '("\\.js\\'\\|\\.json\\'" . js2-mode)) 
 ;; better imenu
 (add-hook 'js2-mode-hook #'js2-imenu-extras-mode) 
 (setq js2-highlight-level 3)
 
-(use-package js2-refactor)
+(use-package js2-refactor
+  :defer t
+  :commands (js2r-add-keybindings-with-prefix)
+  :init (after :js2-mode
+          (js2r-add-keybindings-with-prefix "SPC m r")
+          (add-hook 'js2-mode-hook 'js2-refactor-mode)))
 (use-package xref-js2)
-(add-hook 'js2-mode-hook #'js2-refactor-mode)
-(js2r-add-keybindings-with-prefix "C-c C-m")
 (define-key js2-mode-map (kbd "C-k") #'js2r-kill)
 
 ;; js-mode (which js2 is based on) binds "M-." which conflicts with xref, so
@@ -594,6 +620,17 @@
 ;; testing - suggest.el https://github.com/Wilfred/suggest.el
 (use-package suggest)
 
+;; eldoc - provides minibuffer hints when working in elisp
+(use-package "eldoc"
+  :diminish eldoc-mode
+  :commands turn-on-eldoc-mode
+  :defer t
+  :init
+  (progn
+  (add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode)
+  (add-hook 'lisp-interaction-mode-hook 'turn-on-eldoc-mode)
+  (add-hook 'ielm-mode-hook 'turn-on-eldoc-mode)))
+
 
 ;; ======== RACKET ========
 (use-package racket-mode)
@@ -607,12 +644,37 @@
 (add-hook 'racket-mode-hook #'evil-cleverparens-mode)
 (add-hook 'racket-mode-hook #'highlight-quoted-mode)
 
+
 ;; ======== MAGIT ========
 (use-package evil-magit)
+
+;; full screen magit-status
+(defadvice magit-status (around magit-fullscreen activate)
+  (window-configuration-to-register :magit-fullscreen)
+  ad-do-it
+  (delete-other-windows))
+
+(defun magit-quit-session ()
+  "Restores the previous window configuration and kills the magit buffer"
+  (interactive)
+  (kill-buffer)
+  (jump-to-register :magit-fullscreen))
+
+(define-key magit-status-mode-map (kbd "q") 'magit-quit-session)
 
 
 ;; ======== HELPFUL ========
 (use-package helpful)
+
+
+;; ======== UNDO TREE ========
+(use-package undo-tree
+  :diminish undo-tree-mode
+  :config
+  (progn
+    (global-undo-tree-mode)
+    (setq undo-tree-visualizer-timestamps t)
+    (setq undo-tree-visualizer-diff t)))
 
 
 ;; ======== THEMES/COLOR MODS ========
@@ -653,6 +715,18 @@
          (new-window (split-window-vertically (floor (* 0.7 lines)))))
     (select-window new-window)
     (eshell "eshell"))) 
+
+(defun comint-delchar-or-eof-or-kill-buffer (arg)
+  "C-d on empty line in shell kills process. C-d again kills shell."
+  (interactive "p")
+  (if (null (get-buffer-process (current-buffer)))
+      (kill-buffer)
+    (comint-delchar-or-maybe-eof arg)))
+
+(add-hook 'shell-mode-hook
+          (lambda ()
+            (define-key shell-mode-map
+              (kbd "C-d") 'comint-delchar-or-eof-or-kill-buffer)))
 
 (defun kill-buffer-and-window ()
   "Kill buffer and window."
@@ -702,6 +776,114 @@
   "Save all open buffers."
   (interactive)
   (save-some-buffers t))
+
+(defun collapse-next-line ()
+  "Pulls next line up to current."
+  (interactive)
+  (join-line -1))
+
+(defun copy-file-name-to-clipboard ()
+  "Copy the current buffer file name to the clipboard."
+  (interactive)
+  (let ((filename (if (equal major-mode 'dired-mode)
+                      default-directory
+                    (buffer-file-name))))
+    (when filename
+      (kill-new filename)
+      (message "Copied buffer file name '%s' to the clipboard." filename))))
+
+(defun xah-toggle-margin-right ()
+  "Toggle the right margin between `fill-column' or window width.
+This command is convenient when reading novel, documentation."
+  (interactive)
+  (if (eq (cdr (window-margins)) nil)
+      (set-window-margins nil 0 (- (window-body-width) fill-column))
+    (set-window-margins nil 0 0)))
+
+(defun rotate-windows ()
+  "Switch buffers in two windows, preserving layout."
+  (interactive)
+  (cond ((not (> (count-windows)1))
+         (message "You can't rotate a single window!"))
+        (t
+         (setq i 1)
+         (setq numWindows (count-windows))
+         (while  (< i numWindows)
+           (let* (
+                  (w1 (elt (window-list) i))
+                  (w2 (elt (window-list) (+ (% i numWindows) 1)))
+
+                  (b1 (window-buffer w1))
+                  (b2 (window-buffer w2))
+
+                  (s1 (window-start w1))
+                  (s2 (window-start w2))
+                  )
+             (set-window-buffer w1  b2)
+             (set-window-buffer w2 b1)
+             (set-window-start w1 s2)
+             (set-window-start w2 s1)
+             (setq i (1+ i)))))))
+
+(defun delete-current-buffer-file ()
+  "Remove file connected to current buffer and kill buffer."
+  (interactive)
+  (let ((filename (buffer-file-name))
+        (buffer (current-buffer))
+        (name (buffer-name)))
+    (if (not (and filename (file-exists-p filename)))
+        (ido-kill-buffer)
+      (when (yes-or-no-p "Are you sure you want to remove this file? ")
+        (delete-file filename)
+        (kill-buffer buffer)
+        (message "File '%s' successfully removed" filename)))))
+
+(defun rename-current-buffer-file ()
+  "Renames current buffer and file it is visiting."
+  (interactive)
+  (let ((name (buffer-name))
+        (filename (buffer-file-name)))
+    (if (not (and filename (file-exists-p filename)))
+        (error "Buffer '%s' is not visiting a file!" name)
+      (let ((new-name (read-file-name "New name: " filename)))
+        (if (get-buffer new-name)
+            (error "A buffer named '%s' already exists!" new-name)
+          (rename-file filename new-name 1)
+          (rename-buffer new-name)
+          (set-visited-file-name new-name)
+          (set-buffer-modified-p nil)
+          (message "File '%s' successfully renamed to '%s'"
+                   name (file-name-nondirectory new-name)))))))
+
+(defun move-line-down ()
+  (interactive)
+  (let ((col (current-column)))
+    (save-excursion
+      (forward-line)
+      (transpose-lines 1))
+    (forward-line)
+    (move-to-column col)))
+
+(defun move-line-up ()
+  (interactive)
+  (let ((col (current-column)))
+    (save-excursion
+      (forward-line)
+      (transpose-lines -1))
+    (move-to-column col)))
+
+(defun my/describe-random-interactive-function ()
+  (interactive)
+  "Show the documentation for a random interactive function.
+Consider only documented, non-obsolete functions."
+  (let (result)
+    (mapatoms
+     (lambda (s)
+       (when (and (commandp s) 
+                  (documentation s t)
+                  (null (get s 'byte-obsolete-info)))
+         (setq result (cons s result)))))
+    (describe-function (elt result (random (length result))))))
 
 
 (custom-set-variables
