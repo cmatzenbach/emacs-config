@@ -25,7 +25,7 @@
 ;; keep fringes clean
 (setq-default indicate-empty-lines nil)
 ;; no more ugly line splitting
-(setq-default truncate-lines t)
+;(setq-default truncate-lines t)
 
 
 ;; ======== HISTORY ========
@@ -226,8 +226,13 @@
 
  ;; applications
  "a" '(:ignore t :which-key "Applications")
- "ar" 'ranger
  "ad" 'dired
+ "ar" 'ranger
+ "ao" '(:ignore t :which-key "Org")
+ "aoa" 'org-agenda
+ "aob" 'org-switchb
+ "aoc" 'org-capture
+ "aol" 'org-store-link
 
  ;; buffers
  "b" '(:ignore t :which-key "Buffers")
@@ -294,6 +299,9 @@
  "l8" 'eyebrowse-switch-to-window-config-8
  "l9" 'eyebrowse-switch-to-window-config-9
  
+ ;;
+ "m" '(:ignore t :which-key "Major")
+
  ;; projectile
  ;; bind p to be the prefix for opening the map of projectile commands
  "p" '(:keymap projectile-command-map :package projectile :which-key "Project")
@@ -312,7 +320,25 @@
  "wr" 'rotate-windows
  "w/" 'evil-window-vsplit
  "w-" 'evil-window-split
- ) 
+ )
+
+(general-define-key
+ :states '(normal emacs-lisp-mode-map)
+ :major-modes '(emacs-lisp-mode t)
+ :prefix "SPC m"
+
+ "e" '(:ignore t :which-key "Eval")
+ "eb" 'eval-buffer
+ "er" 'eval-region)
+
+(general-define-key
+ :states '(normal js2-mode-map)
+ :major-modes '(js2-mode t)
+ :prefix "SPC m"
+
+ "e" '(:ignore t :which-key "Errors")
+ "en" 'js2-error-buffer-next
+ "ep" 'js2-error-buffer-prev)
 
 
 ;; ======== COMPANY ========
@@ -632,6 +658,26 @@
   (add-hook 'ielm-mode-hook 'turn-on-eldoc-mode)))
 
 
+;; ======== COMMON LISP ========
+(load (expand-file-name "~/quicklisp/slime-helper.el"))
+;; Replace "sbcl" with the path to your implementation
+(setq inferior-lisp-program "/usr/bin/sbcl")
+(add-to-list 'auto-mode-alist '("\\.lisp\\'\\|\\.cl\\'" . lisp-mode)) 
+
+(add-hook 'lisp-mode-hook (lambda ()
+                            (slime-mode t)
+                            (use-package slime-company)
+                            (company-mode t)))
+
+;(setq slime-contribs '(slime-fancy slime-company))
+(slime-setup '(slime-fancy slime-company))
+
+(add-hook 'lisp-mode-hook #'smartparens-mode)
+(add-hook 'lisp-mode-hook #'smartparens-strict-mode)
+(add-hook 'lisp-mode-hook #'evil-cleverparens-mode)
+(add-hook 'lisp-mode-hook #'highlight-quoted-mode)
+
+
 ;; ======== RACKET ========
 (use-package racket-mode)
 (use-package quack)
@@ -675,6 +721,42 @@
     (global-undo-tree-mode)
     (setq undo-tree-visualizer-timestamps t)
     (setq undo-tree-visualizer-diff t)))
+
+
+;; ======== ORG-MODE ========
+(use-package org)
+(setq org-M-RET-may-split-line nil)
+
+;; beautify org-mode
+(require 'org-bullets)
+(add-hook 'org-mode-hook
+          (lambda ()
+            (org-bullets-mode t)))
+(setq org-ellipsis "⤵")
+
+;; configure which files to use in org-agenda
+ (setq org-agenda-files (list "~/org/inbox.org"
+                               "~/org/email.org"
+                               "~/org/tasks.org"
+                               "~/org/wtasks.org"
+                               "~/org/journal.org"
+                               "~/org/wjournal.org"
+                               "~/org/kb.org"
+                               "~/org/wkb.org"
+  ))
+  (setq org-agenda-text-search-extra-files
+        (list "~/org/someday.org"
+              "~/org/config.org"
+  ))
+
+  (setq org-refile-targets '((nil :maxlevel . 2)
+                             (org-agenda-files :maxlevel . 2)
+                             ("~/org/someday.org" :maxlevel . 2)
+                             ("~/org/templates.org" :maxlevel . 2)
+                             )
+        )
+(setq org-outline-path-complete-in-steps nil)         ; Refile in a single go
+(setq org-refile-use-outline-path 'file)
 
 
 ;; ======== THEMES/COLOR MODS ========
@@ -899,7 +981,7 @@ Consider only documented, non-obsolete functions."
  '(linum-format " %5i ")
  '(package-selected-packages
    (quote
-    (magit nord-theme eyebrowse evil-collection solarized-theme evil-magit ac-php company-php php-mode evil-cleverparens evil-smartparens smartparens tide indium js2-mode smart-mode-line sublime-themes counsel general evil)))
+    (slime-company magit nord-theme eyebrowse evil-collection solarized-theme evil-magit ac-php company-php php-mode evil-cleverparens evil-smartparens smartparens tide indium js2-mode smart-mode-line sublime-themes counsel general evil)))
  '(sp-highlight-pair-overlay nil))
 
 (custom-set-faces
