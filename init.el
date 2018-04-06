@@ -323,8 +323,8 @@
  )
 
 (general-define-key
- :states '(normal emacs-lisp-mode-map)
- :major-modes '(emacs-lisp-mode t)
+ :keymaps 'emacs-lisp-mode-map
+ :states 'normal
  :prefix "SPC m"
 
  "e" '(:ignore t :which-key "Eval")
@@ -332,8 +332,8 @@
  "er" 'eval-region)
 
 (general-define-key
- :states '(normal js2-mode-map)
- :major-modes '(js2-mode t)
+ :keymaps 'js2-mode-map
+ :states 'normal
  :prefix "SPC m"
 
  "e" '(:ignore t :which-key "Errors")
@@ -518,12 +518,15 @@
 (add-hook 'js2-mode-hook #'js2-imenu-extras-mode) 
 (setq js2-highlight-level 3)
 
-(use-package js2-refactor
-  :defer t
-  :commands (js2r-add-keybindings-with-prefix)
-  :init (after :js2-mode
-          (js2r-add-keybindings-with-prefix "SPC m r")
-          (add-hook 'js2-mode-hook 'js2-refactor-mode)))
+;(use-package js2-refactor
+;  :defer t
+;  :commands (js2r-add-keybindings-with-prefix)
+;  :init (after :js2-mode
+;          (js2r-add-keybindings-with-prefix "C-r")
+;          (add-hook 'js2-mode-hook 'js2-refactor-mode)))
+(use-package js2-refactor)
+(js2r-add-keybindings-with-prefix "SPC m r")
+
 (use-package xref-js2)
 (define-key js2-mode-map (kbd "C-k") #'js2r-kill)
 
