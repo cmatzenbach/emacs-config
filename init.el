@@ -189,24 +189,89 @@
   :init
   (eyebrowse-mode))
 
+;; ======== ACE-WINDOW ========
+(use-package ace-window)
+
+;; window hydra
+ (defhydra hydra-window ()
+   "
+Movement^^        ^Split^         ^Switch^		^Resize^
+----------------------------------------------------------------
+_h_ ←       	_v_ertical    	_b_uffer		    _q_ X←
+_j_ ↓        	_x_ horizontal	_f_ind files	  _w_ X↓
+_k_ ↑        	_z_ undo      	_a_ce 1		      _e_ X↑
+_l_ →        	_Z_ reset      	_s_wap		      _r_ X→
+_F_ollow		_D_lt Other   	  _S_ave	        max_i_mize
+_SPC_ cancel	_o_nly this   	_d_elete	
+"
+   ("h" windmove-left )
+   ("j" windmove-down )
+   ("k" windmove-up )
+   ("l" windmove-right )
+   ("q" hydra-move-splitter-left)
+   ("w" hydra-move-splitter-down)
+   ("e" hydra-move-splitter-up)
+   ("r" hydra-move-splitter-right)
+   ("b" ivy-switch-buffer)
+   ("f" counsel-find-files)
+   ("F" follow-mode)
+   ("a" (lambda ()
+          (interactive)
+          (ace-window 1)
+          (add-hook 'ace-window-end-once-hook
+                    'hydra-window/body))
+       )
+   ("v" (lambda ()
+          (interactive)
+          (split-window-right)
+          (windmove-right))
+       )
+   ("x" (lambda ()
+          (interactive)
+          (split-window-below)
+          (windmove-down))
+       )
+   ("s" (lambda ()
+          (interactive)
+          (ace-window 4)
+          (add-hook 'ace-window-end-once-hook
+                    'hydra-window/body)))
+   ("S" save-buffer)
+   ("d" delete-window)
+   ("D" (lambda ()
+          (interactive)
+          (ace-window 16)
+          (add-hook 'ace-window-end-once-hook
+                    'hydra-window/body))
+       )
+   ("o" delete-other-windows)
+   ("i" ace-maximize-window)
+   ("z" (progn
+          (winner-undo)
+          (setq this-command 'winner-undo))
+   )
+   ("Z" winner-redo)
+   ("SPC" nil)
+   )
+
 ;; ======== AVY ========
 (use-package avy
   :config
   (avy-setup-default))
 
 ;; ======== TARGETS.EL ========
-(use-package targets
-  :load-path "~/.emacs.d/local-packages/targets.el"
-  :init
-  (setq targets-user-text-objects '((pipe "|" nil separator)
-                                    (paren "(" ")" pair :more-keys "b")
-                                    (bracket "[" "]" pair :more-keys "r")
-                                    (curly "{" "}" pair :more-keys "c")))
-  :config
-  (targets-setup t
-                 :inside-key "i"
-                 :around-key "a"
-                 :remote-key nil))
+;; (use-package targets
+;;   :load-path "~/.emacs.d/local-packages/targets.el"
+;;   :init
+;;   (setq targets-user-text-objects '((pipe "|" nil separator)
+;;                                     (paren "(" ")" pair :more-keys "b")
+;;                                     (bracket "[" "]" pair :more-keys "r")
+;;                                     (curly "{" "}" pair :more-keys "c")))
+;;   :config
+;;   (targets-setup t
+;;                  :inside-key "i"
+;;                  :around-key "a"
+;;                  :remote-key nil))
 
 ;; ======== WHICH-KEY && GENERAL ========
 (use-package which-key :config (which-key-mode 1))
@@ -222,7 +287,7 @@
  ;"?" '(eshell- -goto-filedir-or-home :which-key "iterm - goto dir")
  "TAB" 'switch-to-previous-buffer
  "M-x" 'counsel-M-x ;; gives M-x command counsel features
- ";" 'comment-dwim
+ ";" 'comment-dwim ;; comment out lines
 
  ;; applications
  "a" '(:ignore t :which-key "Applications")
@@ -261,7 +326,7 @@
 
  ;; git
  "g" '(:ignore t :which-key "Git")
- "gs" 'magit
+ "gs" 'magit-status
 
  ;; help
  "h" '(:ignore t :which-key "Help")
@@ -280,11 +345,13 @@
  "j" '(:ignore t :which-key "Jump")
  "jc" 'avy-goto-char-timer
  "jd" 'move-line-down
+ "jfb" 'beginning-of-defun
+ "jfe" 'end-of-defun
  "jl" 'avy-goto-line
  "jn" 'collapse-next-line
- "jq" 'avy-goto-word-1
+ "jq" 'avy-goto-word-0
  "ju" 'move-line-up
- "jw" 'avy-goto-word-0
+ "jw" 'avy-goto-word-1
 
  ;; perspective
  "l" '(:keymap persp-key-map :package persp-mode :which-key "Layout")
@@ -298,8 +365,8 @@
  "l7" 'eyebrowse-switch-to-window-config-7
  "l8" 'eyebrowse-switch-to-window-config-8
  "l9" 'eyebrowse-switch-to-window-config-9
- 
- ;;
+
+ ;; global/major mode stuff
  "m" '(:ignore t :which-key "Major")
 
  ;; projectile
@@ -312,6 +379,7 @@
 
  ;; windows
  "w" '(:ignore t :which-key "Windows")
+ "wa" 'hydra-window/body
  "wd" 'evil-window-delete
  "wh" 'evil-window-left
  "wj" 'evil-window-down
@@ -322,24 +390,27 @@
  "w-" 'evil-window-split
  )
 
-(general-define-key
- :states '(normal emacs-lisp-mode-map)
- :major-modes '(emacs-lisp-mode t)
- :prefix "SPC m"
+;; (general-define-key
+;;  :states '(normal emacs-lisp-mode-map)
+;;  :major-modes '(emacs-lisp-mode t)
+;;  :prefix "SPC m"
 
- "e" '(:ignore t :which-key "Eval")
- "eb" 'eval-buffer
- "er" 'eval-region)
+;;  "e" '(:ignore t :which-key "Eval")
+;;  "eb" 'eval-buffer
+;;  "er" 'eval-region)
 
-(general-define-key
- :states '(normal js2-mode-map)
- :major-modes '(js2-mode t)
- :prefix "SPC m"
+;; (general-define-key
+;;  :states '(normal js2-mode-map)
+;;  :major-modes 'js2-mode
+;;  :prefix "SPC m"
 
- "e" '(:ignore t :which-key "Errors")
- "en" 'js2-error-buffer-next
- "ep" 'js2-error-buffer-prev)
+;;  "e" '(:ignore t :which-key "Errors")
+;;  "en" 'js2-error-buffer-next
+;;  "ep" 'js2-error-buffer-prev)
 
+
+;; ======== HYDRA ========
+(use-package hydra)
 
 ;; ======== COMPANY ========
 (use-package company
@@ -519,11 +590,15 @@
 (setq js2-highlight-level 3)
 
 (use-package js2-refactor
-  :defer t
-  :commands (js2r-add-keybindings-with-prefix)
-  :init (after :js2-mode
-          (js2r-add-keybindings-with-prefix "SPC m r")
-          (add-hook 'js2-mode-hook 'js2-refactor-mode)))
+  :defer t)
+(js2r-add-keybindings-with-prefix "C-c C-m")
+(define-key js2-mode-map (kbd "C-c r") #'js2-refactor-hydra/body)
+;; (use-package js2-refactor
+;;   :defer t
+;;   :commands (js2r-add-keybindings-with-prefix)
+;;   :init (after :js2-mode
+;;           (js2r-add-keybindings-with-prefix "SPC m r")
+;;           (add-hook 'js2-mode-hook 'js2-refactor-mode)))
 (use-package xref-js2)
 (define-key js2-mode-map (kbd "C-k") #'js2r-kill)
 
@@ -536,12 +611,53 @@
 (add-hook 'js2-mode-hook #'evil-smartparens-mode)
 (sp-local-pair 'js2-mode "{" nil :post-handlers '((my-create-newline-and-enter-sexp "RET")))
 (add-hook 'js2-mode-hook 'flycheck-mode)
+(add-hook 'js2-mode-hook #'js2-refactor-mode)
 (add-hook 'js2-mode-hook (lambda ()
   (add-hook 'xref-backend-functions #'xref-js2-xref-backend nil t)))
 
 ;; indium
 (use-package indium)
 
+;; js2-refactor hydra
+(defhydra js2-refactor-hydra (:color blue :hint nil)
+    "
+^Functions^                    ^Variables^               ^Buffer^                      ^sexp^               ^Debugging^
+------------------------------------------------------------------------------------------------------------------------------
+[_lp_] Localize Parameter      [_ev_] Extract variable   [_wi_] Wrap buffer in IIFE    [_k_]  js2 kill      [_lt_] log this
+[_ef_] Extract function        [_iv_] Inline variable    [_ig_] Inject global in IIFE  [_ss_] split string  [_dt_] debug this
+[_ip_] Introduce parameter     [_rv_] Rename variable    [_ee_] Expand node at point   [_sl_] forward slurp
+[_em_] Extract method          [_vt_] Var to this        [_cc_] Contract node at point [_ba_] forward barf
+[_ao_] Arguments to object     [_sv_] Split var decl.    [_uw_] unwrap
+[_tf_] Toggle fun exp and decl [_ag_] Add var to globals
+[_ta_] Toggle fun expr and =>  [_ti_] Ternary to if
+[_q_]  quit"
+    ("ee" js2r-expand-node-at-point)
+("cc" js2r-contract-node-at-point)
+("ef" js2r-extract-function)
+("em" js2r-extract-method)
+("tf" js2r-toggle-function-expression-and-declaration)
+("ta" js2r-toggle-arrow-function-and-expression)
+("ip" js2r-introduce-parameter)
+("lp" js2r-localize-parameter)
+("wi" js2r-wrap-buffer-in-iife)
+("ig" js2r-inject-global-in-iife)
+("ag" js2r-add-to-globals-annotation)
+("ev" js2r-extract-var)
+("iv" js2r-inline-var)
+("rv" js2r-rename-var)
+("vt" js2r-var-to-this)
+("ao" js2r-arguments-to-object)
+("ti" js2r-ternary-to-if)
+("sv" js2r-split-var-declaration)
+("ss" js2r-split-string)
+("uw" js2r-unwrap)
+("lt" js2r-log-this)
+("dt" js2r-debug-this)
+("sl" js2r-forward-slurp)
+("ba" js2r-forward-barf)
+("k" js2r-kill)
+("q" nil)
+)
 
 ;; ======== TYPESCRIPT ==============
 (use-package tide)
@@ -602,7 +718,7 @@
 
 ;; ======== SQL IDE ========
 ;; windows only - fix to make emacs+mysql work
-(setq sql-mysql-options '("-C" "-t" "-f" "-n"))
+;; (setq sql-mysql-options '("-C" "-t" "-f" "-n"))
 ;; set up connection list
 (setq sql-connection-alist
       '((casesdev (sql-product 'mysql)
@@ -659,7 +775,7 @@
 
 
 ;; ======== COMMON LISP ========
-(load (expand-file-name "~/quicklisp/slime-helper.el"))
+(load (expand-file-name "~/.quicklisp/slime-helper.el"))
 ;; Replace "sbcl" with the path to your implementation
 (setq inferior-lisp-program "/usr/bin/sbcl")
 (add-to-list 'auto-mode-alist '("\\.lisp\\'\\|\\.cl\\'" . lisp-mode)) 
@@ -689,6 +805,11 @@
 (add-hook 'racket-mode-hook #'smartparens-strict-mode)
 (add-hook 'racket-mode-hook #'evil-cleverparens-mode)
 (add-hook 'racket-mode-hook #'highlight-quoted-mode)
+
+
+;; ======== COMMON LISP ========
+(load (expand-file-name "~/.quicklisp/slime-helper.el"))
+(setq inferior-lisp-program "/usr/bin/sbcl")
 
 
 ;; ======== MAGIT ========
@@ -727,12 +848,33 @@
 (use-package org)
 (setq org-M-RET-may-split-line nil)
 
+;; use uuid's for org links
+;; (require org-id)
+;; (setq org-id-link-to-org-use-id 'create-if-interactive)
+
 ;; beautify org-mode
-(require 'org-bullets)
+;(use-package'org-bullets)
 (add-hook 'org-mode-hook
           (lambda ()
             (org-bullets-mode t)))
 (setq org-ellipsis "⤵")
+
+(setq org-default-notes-file "~/org/tasks.org")
+(setq org-capture-templates
+      '(
+        ("t" "Todo" entry (file+headline "inbox.org" "Tasks")
+         "* TODO %?\n  %i\n  %u\n  %a")
+        ("n" "Note/Data" entry (file+headline "inbox.org" "Notes/Data")
+         "* %?   \n  %i\n  %u\n  %a")
+        ("j" "Journal" entry (file+datetree "~/org/journal.org")
+         "* %?\nEntered on %U\n %i\n %a")
+        ("J" "Work-Journal" entry (file+datetree "~/org/wjournal.org")
+         "* %?\nEntered on %U\n %i\n %a")
+        ))
+(setq org-irc-link-to-logs t)
+
+;; note time when something is marked as complete
+(setq org-log-done 'time)
 
 ;; configure which files to use in org-agenda
  (setq org-agenda-files (list "~/org/inbox.org"
@@ -981,7 +1123,7 @@ Consider only documented, non-obsolete functions."
  '(linum-format " %5i ")
  '(package-selected-packages
    (quote
-    (slime-company magit nord-theme eyebrowse evil-collection solarized-theme evil-magit ac-php company-php php-mode evil-cleverparens evil-smartparens smartparens tide indium js2-mode smart-mode-line sublime-themes counsel general evil)))
+    (hydra org-bullets slime magit nord-theme eyebrowse evil-collection solarized-theme evil-magit ac-php company-php php-mode evil-cleverparens evil-smartparens smartparens tide indium js2-mode smart-mode-line sublime-themes counsel general evil)))
  '(sp-highlight-pair-overlay nil))
 
 (custom-set-faces
