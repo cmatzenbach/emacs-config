@@ -208,6 +208,9 @@
                  :around-key "a"
                  :remote-key nil))
 
+;; ======== HYDRA ========
+(use-package hydra)
+
 ;; ======== WHICH-KEY && GENERAL ========
 (use-package which-key :config (which-key-mode 1))
 (setq which-key-idle-delay 0.3) 
@@ -300,7 +303,7 @@
  "l9" 'eyebrowse-switch-to-window-config-9
  
  ;;
- "m" '(:ignore t :which-key "Major")
+ "m" 'hydra-by-major-mode
 
  ;; projectile
  ;; bind p to be the prefix for opening the map of projectile commands
@@ -322,23 +325,27 @@
  "w-" 'evil-window-split
  )
 
-(general-define-key
- :keymaps 'emacs-lisp-mode-map
- :states 'normal
- :prefix "SPC m"
+;; (general-define-key
+;;  :keymaps 'emacs-lisp-mode-map
+;;  :states 'normal
+;;  :prefix "SPC m"
 
- "e" '(:ignore t :which-key "Eval")
- "eb" 'eval-buffer
- "er" 'eval-region)
+;;  "e" '(:ignore t :which-key "Eval")
+;;  "eb" 'eval-buffer
+;;  "er" 'eval-region)
 
-(general-define-key
- :keymaps 'js2-mode-map
- :states 'normal
- :prefix "SPC m"
+;; (general-define-key
+;;  :keymaps 'js2-mode-map
+;;  :states 'normal
+;;  :prefix "SPC m"
 
- "e" '(:ignore t :which-key "Errors")
- "en" 'js2-error-buffer-next
- "ep" 'js2-error-buffer-prev)
+;;  "e" '(:ignore t :which-key "Errors")
+;;  "en" 'js2-error-buffer-next
+;;  "ep" 'js2-error-buffer-prev)
+
+
+;; ======== HYDRA ========
+
 
 
 ;; ======== COMPANY ========
@@ -388,6 +395,34 @@
 (use-package flycheck
   :init (global-flycheck-mode))
 
+(add-hook 'flycheck-mode-hook 'counsel-gtags-mode)
+
+(defun lunaryorn-use-js-executables-from-node-modules ()
+  "Set executables of JS checkers from local node modules."
+  (-when-let* ((file-name (buffer-file-name))
+               (root (locate-dominating-file file-name "node_modules"))
+               (module-directory (expand-file-name "node_modules" root)))
+    (pcase-dolist (`(,checker . ,module) '((javascript-jshint . "jshint")
+                                           (javascript-eslint . "eslint")
+                                           (javascript-jscs   . "jscs")))
+      (let ((package-directory (expand-file-name module module-directory))
+            (executable-var (flycheck-checker-executable-variable checker)))
+        (when (file-directory-p package-directory)
+          (set (make-local-variable executable-var)
+               (expand-file-name (concat "bin/" module ".js")
+package-directory)))))))
+
+(defhydra hydra-flycheck
+  (:pre (progn (setq hydra-lv t) (flycheck-list-errors))
+   :post (progn (setq hydra-lv nil) (quit-windows-on "*Flycheck errors*"))
+   :hint nil)
+  "Errors"
+  ("f"  flycheck-error-list-set-filter                            "Filter")
+  ("j"  flycheck-next-error                                       "Next")
+  ("k"  flycheck-previous-error                                   "Previous")
+  ("gg" flycheck-first-error                                      "First")
+  ("G"  (progn (goto-char (point-max)) (flycheck-previous-error)) "Last")
+  ("q"  nil))
 
 ;; ======== GGTAGS ========
 ;(use-package ggtags)
@@ -510,6 +545,13 @@
 (add-hook 'c-mode-hook #'evil-smartparens-mode)
 (sp-local-pair 'c-mode "{" nil :post-handlers '((my-create-newline-and-enter-sexp "RET")))
 
+(defhydra hydra-c (:color red
+                   :hint nil)
+"
+_f_ flycheck
+"
+("f" hydra-flycheck/body :exit t)
+)
 
 ;; ======== JAVASCRIPT ========
 (use-package js2-mode)
@@ -530,21 +572,32 @@
 (use-package xref-js2)
 (define-key js2-mode-map (kbd "C-k") #'js2r-kill)
 
+;; add-node-modules-path retrives binaries from node_modules for things like eslint
+(use-package add-node-modules-path)
+
 ;; js-mode (which js2 is based on) binds "M-." which conflicts with xref, so
 ;; unbind it.
 (define-key js-mode-map (kbd "M-.") nil)
 
-;; setup smartparens and flycheck
+;; setup mode hooks
 (add-hook 'js2-mode-hook #'smartparens-mode)
 (add-hook 'js2-mode-hook #'evil-smartparens-mode)
 (sp-local-pair 'js2-mode "{" nil :post-handlers '((my-create-newline-and-enter-sexp "RET")))
 (add-hook 'js2-mode-hook 'flycheck-mode)
 (add-hook 'js2-mode-hook (lambda ()
   (add-hook 'xref-backend-functions #'xref-js2-xref-backend nil t)))
+(add-hook 'js2-mode-hook 'add-node-modules-path)
 
 ;; indium
 (use-package indium)
 
+(defhydra hydra-javascript (:color red
+                            :hint nil)
+"
+_f_ flycheck
+"
+("f" hydra-flycheck/body :exit t)
+)
 
 ;; ======== TYPESCRIPT ==============
 (use-package tide)
@@ -569,6 +622,7 @@
 (sp-local-pair 'typescript-mode "{" nil :post-handlers '((my-create-newline-and-enter-sexp "RET")))
 ;; run required configuration function for tide
 (add-hook 'typescript-mode-hook #'setup-tide-mode)
+(add-hook 'typescript-mode-hook 'add-node-modules-path)
 
 
 ;; ======== PHP ========
@@ -599,6 +653,9 @@
 (add-to-list 'auto-mode-alist '("\\.html\\.twig\\'" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
 
+(add-hook 'web-mode-hook (lambda ()
+                          (set (make-local-variable 'company-backends) '(company-web-html))
+                          (company-mode t)))
 (add-hook 'web-mode-hook #'smartparens-mode)
 (add-hook 'web-mode-hook #'evil-smartparens-mode)
 
@@ -645,6 +702,9 @@
 (add-hook 'emacs-lisp-mode-hook #'highlight-defined-mode)
 ;; minor mode for highlighting lisp quotes and quoted symbols (locally installed package)
 (add-hook 'emacs-lisp-mode-hook #'highlight-quoted-mode)
+(add-hook 'emacs-lisp-mode-hook
+          (lambda ()
+            (define-key emacs-lisp-mode-map "\C-x\C-e" 'pp-eval-last-sexp)))
 
 ;; testing - suggest.el https://github.com/Wilfred/suggest.el
 (use-package suggest)
@@ -660,6 +720,19 @@
   (add-hook 'lisp-interaction-mode-hook 'turn-on-eldoc-mode)
   (add-hook 'ielm-mode-hook 'turn-on-eldoc-mode)))
 
+(defhydra hydra-elisp (:color red
+                       :hint nil)
+"
+_eb_ eval buffer
+_er_ eval region
+_es_ eval sexp
+_f_ flycheck
+"
+("eb" eval-buffer)
+("er" eval-region)
+("es" pp-eval-last-sexp)
+("f" hydra-flycheck/body :exit t)
+)
 
 ;; ======== COMMON LISP ========
 (load (expand-file-name "~/quicklisp/slime-helper.el"))
@@ -848,6 +921,20 @@
             (forward-char 1)
           (call-interactively #'self-insert-command))))
 
+(defun hydra-by-major-mode ()
+  "Selects specific hydra to be used based on major mode."
+  (interactive)
+  (cl-case major-mode
+    ;; major modes with their associated hydras
+    (emacs-lisp-mode
+     (hydra-elisp/body))
+    (c-mode
+     (hydra-c/body))
+    (js2-mode
+     (hydra-javascript/body))
+    (t
+     (error "%S not supported" major-mode))))
+
 (defun company-mode/backend-with-yas (backend)
   "Integrate yas suggestions into company completion window."
   (if (or (not company-mode/enable-yas) (and (listp backend) (member 'company-yasnippet backend)))
@@ -984,7 +1071,7 @@ Consider only documented, non-obsolete functions."
  '(linum-format " %5i ")
  '(package-selected-packages
    (quote
-    (slime-company magit nord-theme eyebrowse evil-collection solarized-theme evil-magit ac-php company-php php-mode evil-cleverparens evil-smartparens smartparens tide indium js2-mode smart-mode-line sublime-themes counsel general evil)))
+    (add-node-modules-path hydra slime-company magit nord-theme eyebrowse evil-collection solarized-theme evil-magit ac-php company-php php-mode evil-cleverparens evil-smartparens smartparens tide indium js2-mode smart-mode-line sublime-themes counsel general evil)))
  '(sp-highlight-pair-overlay nil))
 
 (custom-set-faces
