@@ -657,7 +657,46 @@ _f_ flycheck
 (add-hook 'js2-mode-hook 'add-node-modules-path)
 
 ;; indium
-(use-package indium)
+(use-package indium
+  :defer t)
+
+;; skewer
+(use-package skewer-mode
+  :defer t)
+
+;; spacemacs skewer functions
+
+(defun spacemacs/skewer-start-repl ()
+  "Attach a browser to Emacs and start a skewer REPL."
+  (interactive)
+  (run-skewer)
+  (skewer-repl))
+
+(defun spacemacs/skewer-load-buffer-and-focus ()
+  "Execute whole buffer in browser and switch to REPL in insert state."
+  (interactive)
+  (skewer-load-buffer)
+  (skewer-repl)
+  (evil-insert-state))
+
+(defun spacemacs/skewer-eval-defun-and-focus ()
+  "Execute function at point in browser and switch to REPL in insert state."
+  (interactive)
+  (skewer-eval-defun)
+  (skewer-repl)
+  (evil-insert-state))
+
+(defun spacemacs/skewer-eval-region (beg end)
+  "Execute the region as JavaScript code in the attached browser."
+  (interactive "r")
+  (skewer-eval (buffer-substring beg end) #'skewer-post-minibuffer))
+
+(defun spacemacs/skewer-eval-region-and-focus (beg end)
+  "Execute the region in browser and swith to REPL in insert state."
+  (interactive "r")
+  (spacemacs/skewer-eval-region beg end)
+  (skewer-repl)
+  (evil-insert-state))
 
 ;; js2-refactor hydra
 (defhydra js2-refactor-hydra (:color blue :hint nil)
@@ -671,7 +710,7 @@ _f_ flycheck
 [_ao_] Arguments to object     [_sv_] Split var decl.    [_uw_] unwrap
 [_tf_] Toggle fun exp and decl [_ag_] Add var to globals
 [_ta_] Toggle fun expr and =>  [_ti_] Ternary to if
-[_q_]  quit"
+[_z_] return                   [_q_]  quit"
     ("ee" js2r-expand-node-at-point)
 ("cc" js2r-contract-node-at-point)
 ("ef" js2r-extract-function)
@@ -698,16 +737,24 @@ _f_ flycheck
 ("ba" js2r-forward-barf)
 ("k" js2r-kill)
 ("q" nil)
+("z" hydra-javascript/body)
+)
 
 (defhydra hydra-javascript (:color red
                             :hint nil)
 "
-_f_ flycheck
+_'_ → REPL     _f_ → flycheck     _in_ → indium node      _r_ → refactor
+_j_ jump (imenu)                  _ic_ → indium chrome
 "
+("'" spacemacs/skewer-start-repl :exit t)
 ("f" hydra-flycheck/body :exit t)
+("in" indium-run-node :exit t)
+("ic" indium-connect-to-chrome :exit t)
+("j" counsel-imenu :exit t)
+("r" js2-refactor-hydra/body :exit t)
 )
 
-;; ======== TYPESCRIPT ==============
+;; ======== TYPESCRIPT ========
 (use-package tide)
 (defun setup-tide-mode ()
   (interactive)
@@ -721,6 +768,8 @@ _f_ flycheck
   ;; `M-x package-install [ret] company`
   (company-mode +1)) 
 
+;; add completion details
+(setq tide-completion-detailed t)
 ;; aligns annotation to the right hand side
 (setq company-tooltip-align-annotations t)
 
@@ -732,6 +781,21 @@ _f_ flycheck
 (add-hook 'typescript-mode-hook #'setup-tide-mode)
 (add-hook 'typescript-mode-hook 'add-node-modules-path)
 
+(defhydra hydra-typescript (:color red
+                                   :hint nil)
+"
+_d_ → doc at point      _f_ → format       _r_ → refactor
+_s_ → list references   _a_ → apply fix    _j_ → jsdoc comment
+_i_ → organize imports
+"
+  ("d" tide-documentation-at-point :exit t)
+  ("s" tide-references :exit t)
+  ("f" tide-format)
+  ("a" tide-fix)
+  ("r" tide-refactor)
+  ("j" tide-jsdoc-template)
+  ("i" tide-organize-imports) 
+ )
 
 ;; ======== PHP ========
 (use-package php-mode)
@@ -912,6 +976,13 @@ _f_ flycheck
     (setq undo-tree-visualizer-diff t)))
 
 
+;; ======== MARKDOWN ========
+(when (use-package markdown-mode)
+  (add-to-list 'auto-mode-alist '("\\.md\\.html\\'" . markdown-mode))
+  (after-load 'whitespace-cleanup-mode
+(push 'markdown-mode whitespace-cleanup-mode-ignore-modes)))
+
+
 ;; ======== ORG-MODE ========
 (use-package org)
 (setq org-M-RET-may-split-line nil)
@@ -1066,6 +1137,8 @@ _f_ flycheck
      (hydra-c/body))
     (js2-mode
      (hydra-javascript/body))
+    (typescript-mode
+     (hydra-typescript/body))
     (t
      (error "%S not supported" major-mode))))
 
@@ -1205,7 +1278,7 @@ Consider only documented, non-obsolete functions."
  '(linum-format " %5i ")
  '(package-selected-packages
    (quote
-    (hydra org-bullets slime magit nord-theme eyebrowse evil-collection solarized-theme evil-magit ac-php company-php php-mode evil-cleverparens evil-smartparens smartparens tide indium js2-mode smart-mode-line sublime-themes counsel general evil)))
+    (skewer-mode skewer markdown-mode hydra org-bullets slime magit nord-theme eyebrowse evil-collection solarized-theme evil-magit ac-php company-php php-mode evil-cleverparens evil-smartparens smartparens tide indium js2-mode smart-mode-line sublime-themes counsel general evil)))
  '(sp-highlight-pair-overlay nil))
 
 (custom-set-faces
