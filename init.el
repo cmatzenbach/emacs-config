@@ -542,8 +542,33 @@ package-directory)))))))
 
 
 ;; ======== C-MODE ========
+(add-hook 'c-mode-hook #'smartparens-mode)
 (add-hook 'c-mode-hook #'evil-smartparens-mode)
 (sp-local-pair 'c-mode "{" nil :post-handlers '((my-create-newline-and-enter-sexp "RET")))
+(add-hook 'c-mode-hook 'flycheck-mode)
+
+;; auto-insert include guards in header files
+;; autoinsert C/C++ header
+(define-auto-insert
+    (cons "\\.\\([Hh]\\|hh\\|hpp\\)\\'" "My C/C++ header")
+    '(nil
+      (let* ((noext (substring buffer-file-name 0 (match-beginning 0)))
+                 (nopath (file-name-nondirectory noext))
+                 (ident (concat (upcase nopath) "_H_")))
+        (concat "#ifndef " ident "\n"
+                        "#define " ident "\n\n\n"
+                        "\n\n#endif // " ident "\n"))
+      ))
+
+(add-hook 'find-file-hook 'auto-insert)
+
+(add-hook 'c-mode-hook (lambda()
+                         (setq company-backends '(company-clang company-dabbrev-code company-keywords company-yasnippet company-files company-dabbrev))
+                         (company-mode 1)
+(global-set-key [C-return] 'company-complete-common)))
+
+; Don't ask to reload TAGS if newer, just do it
+(setq tags-revert-without-query 1)
 
 (defhydra hydra-c (:color red
                    :hint nil)
