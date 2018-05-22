@@ -295,6 +295,7 @@ _SPC_ cancel	_o_nly this   	_d_elete
  ;; applications
  "a" '(:ignore t :which-key "Applications")
  "ad" 'dired
+ "am" 'hydra-macro/body
  "ar" 'ranger
  "ao" '(:ignore t :which-key "Org")
  "aoa" 'org-agenda
@@ -932,7 +933,7 @@ _f_ flycheck
 )
 
 ;; ======== COMMON LISP ========
-(load (expand-file-name "~/.quicklisp/slime-helper.el"))
+(load (expand-file-name "~/quicklisp/slime-helper.el"))
 ;; Replace "sbcl" with the path to your implementation
 (setq inferior-lisp-program "/usr/bin/sbcl")
 (add-to-list 'auto-mode-alist '("\\.lisp\\'\\|\\.cl\\'" . lisp-mode)) 
@@ -965,7 +966,7 @@ _f_ flycheck
 
 
 ;; ======== COMMON LISP ========
-(load (expand-file-name "~/.quicklisp/slime-helper.el"))
+(load (expand-file-name "~/quicklisp/slime-helper.el"))
 (setq inferior-lisp-program "/usr/bin/sbcl")
 
 
@@ -1006,6 +1007,47 @@ _f_ flycheck
   (add-to-list 'auto-mode-alist '("\\.md\\.html\\'" . markdown-mode))
   (after-load 'whitespace-cleanup-mode
 (push 'markdown-mode whitespace-cleanup-mode-ignore-modes)))
+
+(defhydra hydra-markdown (:hint nil)
+  "
+Formatting        C-c C-s    _s_: bold          _e_: italic     _b_: blockquote   _p_: pre-formatted    _c_: code
+
+Headings          C-c C-t    _h_: automatic     _1_: h1         _2_: h2           _3_: h3               _4_: h4
+
+Lists             C-c C-x    _m_: insert item   
+
+Demote/Promote    C-c C-x    _l_: promote       _r_: demote     _u_: move up      _d_: move down
+
+Links, footnotes  C-c C-a    _L_: link          _U_: uri        _F_: footnote     _W_: wiki-link      _R_: reference
+ 
+"
+
+
+  ("s" markdown-insert-bold)
+  ("e" markdown-insert-italic)
+  ("b" markdown-insert-blockquote :color blue)
+  ("p" markdown-insert-pre :color blue)
+  ("c" markdown-insert-code)
+
+  ("h" markdown-insert-header-dwim) 
+  ("1" markdown-insert-header-atx-1)
+  ("2" markdown-insert-header-atx-2)
+  ("3" markdown-insert-header-atx-3)
+  ("4" markdown-insert-header-atx-4)
+
+  ("m" markdown-insert-list-item)
+
+  ("l" markdown-promote)
+  ("r" markdown-demote)
+  ("d" markdown-move-down)
+  ("u" markdown-move-up)  
+
+  ("L" markdown-insert-link :color blue)
+  ("U" markdown-insert-uri :color blue)
+  ("F" markdown-insert-footnote :color blue)
+  ("W" markdown-insert-wiki-link :color blue)
+  ("R" markdown-insert-reference-link-dwim :color blue) 
+)
 
 
 ;; ======== ORG-MODE ========
@@ -1064,6 +1106,122 @@ _f_ flycheck
 (setq org-outline-path-complete-in-steps nil)         ; Refile in a single go
 (setq org-refile-use-outline-path 'file)
 
+;; Hydra for org agenda (graciously taken from Spacemacs)
+(defhydra hydra-org-agenda (:pre (setq which-key-inhibit t)
+                                 :post (setq which-key-inhibit nil)
+                                 :hint none)
+  "
+Org agenda (_q_uit)
+
+^Clock^      ^Visit entry^              ^Date^             ^Other^
+^-----^----  ^-----------^------------  ^----^-----------  ^-----^---------
+_ci_ in      _SPC_ in other window      _ds_ schedule      _gr_ reload
+_co_ out     _TAB_ & go to location     _dd_ set deadline  _._  go to today
+_cq_ cancel  _RET_ & del other windows  _dt_ timestamp     _gd_ go to date
+_cj_ jump    _o_   link                 _+_  do later      ^^
+^^           ^^                         _-_  do earlier    ^^
+^^           ^^                         ^^                 ^^
+^View^          ^Filter^                 ^Headline^         ^Toggle mode^
+^----^--------  ^------^---------------  ^--------^-------  ^-----------^----
+_vd_ day        _ft_ by tag              _ht_ set status    _tf_ follow
+_vw_ week       _fr_ refine by tag       _hk_ kill          _tl_ log
+_vt_ fortnight  _fc_ by category         _hr_ refile        _ta_ archive trees
+_vm_ month      _fh_ by top headline     _hA_ archive       _tA_ archive files
+_vy_ year       _fx_ by regexp           _h:_ set tags      _tr_ clock report
+_vn_ next span  _fd_ delete all filters  _hp_ set priority  _td_ diaries
+_vp_ prev span  ^^                       ^^                 ^^
+_vr_ reset      ^^                       ^^                 ^^
+^^              ^^                       ^^                 ^^
+"
+  ;; Entry
+  ("hA" org-agenda-archive-default)
+  ("hk" org-agenda-kill)
+  ("hp" org-agenda-priority)
+  ("hr" org-agenda-refile)
+  ("h:" org-agenda-set-tags)
+  ("ht" org-agenda-todo)
+  ;; Visit entry
+  ("o"   link-hint-open-link :exit t)
+  ("<tab>" org-agenda-goto :exit t)
+  ("TAB" org-agenda-goto :exit t)
+  ("SPC" org-agenda-show-and-scroll-up)
+  ("RET" org-agenda-switch-to :exit t)
+  ;; Date
+  ("dt" org-agenda-date-prompt)
+  ("dd" org-agenda-deadline)
+  ("+" org-agenda-do-date-later)
+  ("-" org-agenda-do-date-earlier)
+  ("ds" org-agenda-schedule)
+  ;; View
+  ("vd" org-agenda-day-view)
+  ("vw" org-agenda-week-view)
+  ("vt" org-agenda-fortnight-view)
+  ("vm" org-agenda-month-view)
+  ("vy" org-agenda-year-view)
+  ("vn" org-agenda-later)
+  ("vp" org-agenda-earlier)
+  ("vr" org-agenda-reset-view)
+  ;; Toggle mode
+  ("ta" org-agenda-archives-mode)
+  ("tA" (org-agenda-archives-mode 'files))
+  ("tr" org-agenda-clockreport-mode)
+  ("tf" org-agenda-follow-mode)
+  ("tl" org-agenda-log-mode)
+  ("td" org-agenda-toggle-diary)
+  ;; Filter
+  ("fc" org-agenda-filter-by-category)
+  ("fx" org-agenda-filter-by-regexp)
+  ("ft" org-agenda-filter-by-tag)
+  ("fr" org-agenda-filter-by-tag-refine)
+  ("fh" org-agenda-filter-by-top-headline)
+  ("fd" org-agenda-filter-remove-all)
+  ;; Clock
+  ("cq" org-agenda-clock-cancel)
+  ("cj" org-agenda-clock-goto :exit t)
+  ("ci" org-agenda-clock-in :exit t)
+  ("co" org-agenda-clock-out)
+  ;; Other
+  ("q" nil :exit t)
+  ("gd" org-agenda-goto-date)
+  ("." org-agenda-goto-today)
+  ("gr" org-agenda-redo))
+
+
+;; ======== EDITOR MACROS ========
+(defhydra hydra-macro (:hint nil :color pink :pre 
+                             (when defining-kbd-macro
+                                 (kmacro-end-macro 1)))
+  "
+  ^Create-Cycle^   ^Basic^           ^Insert^        ^Save^         ^Edit^
+╭─────────────────────────────────────────────────────────────────────────╯
+     ^_i_^           [_e_] execute    [_n_] insert    [_b_] name      [_'_] previous
+     ^^↑^^           [_d_] delete     [_t_] set       [_K_] key       [_,_] last
+ _j_ ←   → _l_       [_o_] edit       [_a_] add       [_x_] register     
+     ^^↓^^           [_r_] region     [_f_] format    [_B_] defun
+     ^_k_^           [_m_] step
+    ^^   ^^          [_s_] swap
+"
+  ("j" kmacro-start-macro :color blue)
+  ("l" kmacro-end-or-call-macro-repeat)
+  ("i" kmacro-cycle-ring-previous)
+  ("k" kmacro-cycle-ring-next)
+  ("r" apply-macro-to-region-lines)
+  ("d" kmacro-delete-ring-head)
+  ("e" kmacro-end-or-call-macro-repeat)
+  ("o" kmacro-edit-macro-repeat)
+  ("m" kmacro-step-edit-macro)
+  ("s" kmacro-swap-ring)
+  ("n" kmacro-insert-counter)
+  ("t" kmacro-set-counter)
+  ("a" kmacro-add-counter)
+  ("f" kmacro-set-format)
+  ("b" kmacro-name-last-macro)
+  ("K" kmacro-bind-to-key)
+  ("B" insert-kbd-macro)
+  ("x" kmacro-to-register)
+  ("'" kmacro-edit-macro)
+  ("," edit-kbd-macro)
+  ("q" nil :color blue))
 
 ;; ======== THEMES/COLOR MODS ========
 ;; theme packages
@@ -1164,6 +1322,10 @@ _f_ flycheck
      (hydra-javascript/body))
     (typescript-mode
      (hydra-typescript/body))
+    (markdown-mode
+     (hydra-markdown/body))
+    (org-agenda-mode
+     (hydra-org-agenda/body))
     (t
      (error "%S not supported" major-mode))))
 
