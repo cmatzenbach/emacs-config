@@ -25,7 +25,7 @@
 ;; keep fringes clean
 (setq-default indicate-empty-lines nil)
 ;; no more ugly line splitting
-;(setq-default truncate-lines t)
+                                        ;(setq-default truncate-lines t)
 
 
 ;; ======== HISTORY ========
@@ -44,10 +44,10 @@
 (require 'package)
 (setq package-enable-at-startup nil)
 (setq package-archives '(("melpa". "http://melpa.org/packages/")
-			 ("gnu" . "http://elpa.gnu.org/packages/")
-			 ("org" . "https://orgmode.org/elpa/")
-			 ("marmalade" . "https://marmalade-repo.org/packages/")
-			 ("melpa-stable" . "https://melpa-stable.milkbox.net/packages/")))
+                         ("gnu" . "http://elpa.gnu.org/packages/")
+                         ("org" . "https://orgmode.org/elpa/")
+                         ("marmalade" . "https://marmalade-repo.org/packages/")
+                         ("melpa-stable" . "https://melpa-stable.milkbox.net/packages/")))
 (package-initialize)
 
 ;; bootstrap 'use-package'
@@ -55,7 +55,10 @@
   (package-refresh-contents) ; update package archives
   (package-install 'use-package)) ; install most recent version of use-package
 (require 'use-package)
+;; always download packages if not already installed
 (setq use-package-always-ensure t)
+;; TESTING enable imenu support for use-package
+(setq use-package-enable-imenu-support t)
 
 
 ;; ======== LOCAL CONFIG FILES ========
@@ -81,18 +84,18 @@
   :config
   (ivy-mode 1)
   (setq ivy-use-virtual-buffers t
-            ivy-count-format "%d/%d ")
+        ivy-count-format "%d/%d ")
 
   (setq ivy-re-builders-alist
-	'((t . ivy--regex-ignore-order)))
+        '((t . ivy--regex-ignore-order)))
   :bind
   ("C-s" . swiper)
-  ; https://www.reddit.com/r/emacs/comments/6i8rmb/noob_change_ctrlnp_to_vimlike_binding_for_ivy_and/
+                                        ; https://www.reddit.com/r/emacs/comments/6i8rmb/noob_change_ctrlnp_to_vimlike_binding_for_ivy_and/
   (:map ivy-minibuffer-map
-	("C-h" . evil-delete-char) ; supposed to be (kbd "DEL")
-	("C-k" . ivy-previous-line)
-	("C-j" . ivy-next-line)
-	("C-l" . ivy-alt-done)))
+        ("C-h" . evil-delete-char) ; supposed to be (kbd "DEL")
+        ("C-k" . ivy-previous-line)
+        ("C-j" . ivy-next-line)
+        ("C-l" . ivy-alt-done)))
 
 
 ;; ======== EVIL MODE ========
@@ -103,7 +106,7 @@
   (setq evil-want-integration nil)
   :config
   (evil-mode 1))
-    
+
 ;; evil-collection - WIP package to create evil keybindings for missing modes
 (use-package evil-collection
   :after evil
@@ -114,26 +117,28 @@
 (load-user-file "evil-evilified-state.el")
 (require 'evil-evilified-state)
 
-;; use esc to exit minibuffer
-(defun minibuffer-keyboard-quit ()
-  "Abort recursive edit.
-  In Delete Selection mode, if the mark is active, just deactivate it;
-  then it takes a second \\[keyboard-quit] to abort the minibuffer."
-  (interactive)
-  (if (and delete-selection-mode transient-mark-mode mark-active)
-    (setq deactivate-mark  t)
-    (when (get-buffer "*Completions*") (delete-windows-on "*Completions*"))
-    (abort-recursive-edit))) 
+;; ;; use esc to exit minibuffer
+;; (defun minibuffer-keyboard-quit ()
+;;   "Abort recursive edit.
+;;   In Delete Selection mode, if the mark is active, just deactivate it;
+;;   then it takes a second \\[keyboard-quit] to abort the minibuffer."
+;;   (interactive)
+;;   (if (and delete-selection-mode transient-mark-mode mark-active)
+;;       (setq deactivate-mark  t)
+;;     (when (get-buffer "*Completions*") (delete-windows-on "*Completions*"))
+;;     (abort-recursive-edit))) 
 
-;; make esc get me out of different situations
-(define-key evil-normal-state-map [escape] 'keyboard-quit)
-(define-key evil-visual-state-map [escape] 'keyboard-quit)
-(define-key minibuffer-local-map [escape] 'minibuffer-keyboard-quit)
-(define-key minibuffer-local-ns-map [escape] 'minibuffer-keyboard-quit)
-(define-key minibuffer-local-completion-map [escape] 'minibuffer-keyboard-quit)
-(define-key minibuffer-local-must-match-map [escape] 'minibuffer-keyboard-quit)
-(define-key minibuffer-local-isearch-map [escape] 'minibuffer-keyboard-quit)
-;(global-set-key [escape] 'evil-exit-emacs-state)
+;; ;; make esc get me out of different situations
+;; (define-key evil-normal-state-map [escape] 'keyboard-quit)
+;; (define-key evil-visual-state-map [escape] 'keyboard-quit)
+;; (define-key minibuffer-local-map [escape] 'minibuffer-keyboard-quit)
+;; (define-key minibuffer-local-ns-map [escape] 'minibuffer-keyboard-quit)
+;; (define-key minibuffer-local-completion-map [escape] 'minibuffer-keyboard-quit)
+;; (define-key minibuffer-local-must-match-map [escape] 'minibuffer-keyboard-quit)
+;; (define-key minibuffer-local-isearch-map [escape] 'minibuffer-keyboard-quit)
+                                        ;(global-set-key [escape] 'evil-exit-emacs-state)
+
+(require 'evil-collection-minibuffer)
 
 ;; set c-u to have vim-like behavior (scroll up half page)
 (define-key evil-normal-state-map (kbd "C-u") 'evil-scroll-up)
@@ -193,8 +198,8 @@
 (use-package ace-window)
 
 ;; window hydra
- (defhydra hydra-window ()
-   "
+(defhydra hydra-window ()
+  "
 Movement^^        ^Split^         ^Switch^		^Resize^
 ----------------------------------------------------------------
 _h_ ←       	_v_ertical    	_b_uffer		    _q_ X←
@@ -204,55 +209,55 @@ _l_ →        	_Z_ reset      	_s_wap		      _r_ X→
 _F_ollow		_D_lt Other   	  _S_ave	        max_i_mize
 _SPC_ cancel	_o_nly this   	_d_elete	
 "
-   ("h" windmove-left )
-   ("j" windmove-down )
-   ("k" windmove-up )
-   ("l" windmove-right )
-   ("q" hydra-move-splitter-left)
-   ("w" hydra-move-splitter-down)
-   ("e" hydra-move-splitter-up)
-   ("r" hydra-move-splitter-right)
-   ("b" ivy-switch-buffer)
-   ("f" counsel-find-files)
-   ("F" follow-mode)
-   ("a" (lambda ()
-          (interactive)
-          (ace-window 1)
-          (add-hook 'ace-window-end-once-hook
-                    'hydra-window/body))
-       )
-   ("v" (lambda ()
-          (interactive)
-          (split-window-right)
-          (windmove-right))
-       )
-   ("x" (lambda ()
-          (interactive)
-          (split-window-below)
-          (windmove-down))
-       )
-   ("s" (lambda ()
-          (interactive)
-          (ace-window 4)
-          (add-hook 'ace-window-end-once-hook
-                    'hydra-window/body)))
-   ("S" save-buffer)
-   ("d" delete-window)
-   ("D" (lambda ()
-          (interactive)
-          (ace-window 16)
-          (add-hook 'ace-window-end-once-hook
-                    'hydra-window/body))
-       )
-   ("o" delete-other-windows)
-   ("i" ace-maximize-window)
-   ("z" (progn
-          (winner-undo)
-          (setq this-command 'winner-undo))
+  ("h" windmove-left )
+  ("j" windmove-down )
+  ("k" windmove-up )
+  ("l" windmove-right )
+  ("q" hydra-move-splitter-left)
+  ("w" hydra-move-splitter-down)
+  ("e" hydra-move-splitter-up)
+  ("r" hydra-move-splitter-right)
+  ("b" ivy-switch-buffer)
+  ("f" counsel-find-files)
+  ("F" follow-mode)
+  ("a" (lambda ()
+         (interactive)
+         (ace-window 1)
+         (add-hook 'ace-window-end-once-hook
+                   'hydra-window/body))
    )
-   ("Z" winner-redo)
-   ("SPC" nil)
+  ("v" (lambda ()
+         (interactive)
+         (split-window-right)
+         (windmove-right))
    )
+  ("x" (lambda ()
+         (interactive)
+         (split-window-below)
+         (windmove-down))
+   )
+  ("s" (lambda ()
+         (interactive)
+         (ace-window 4)
+         (add-hook 'ace-window-end-once-hook
+                   'hydra-window/body)))
+  ("S" save-buffer)
+  ("d" delete-window)
+  ("D" (lambda ()
+         (interactive)
+         (ace-window 16)
+         (add-hook 'ace-window-end-once-hook
+                   'hydra-window/body))
+   )
+  ("o" delete-other-windows)
+  ("i" ace-maximize-window)
+  ("z" (progn
+         (winner-undo)
+         (setq this-command 'winner-undo))
+   )
+  ("Z" winner-redo)
+  ("SPC" nil)
+  )
 
 ;; ======== AVY ========
 (use-package avy
@@ -287,7 +292,7 @@ _SPC_ cancel	_o_nly this   	_d_elete
  :non-normal-prefix "C-SPC"
  "SPC" 'counsel-M-x
  "'" 'new-eshell
- ;"?" '(eshell- -goto-filedir-or-home :which-key "iterm - goto dir")
+                                        ;"?" '(eshell- -goto-filedir-or-home :which-key "iterm - goto dir")
  "TAB" 'switch-to-previous-buffer
  "M-x" 'counsel-M-x ;; gives M-x command counsel features
  ";" 'comment-dwim ;; comment out lines
@@ -352,6 +357,7 @@ _SPC_ cancel	_o_nly this   	_d_elete
  "jd" 'move-line-down
  "jfb" 'beginning-of-defun
  "jfe" 'end-of-defun
+ "ji" 'counsel-imenu
  "jl" 'avy-goto-line
  "jn" 'collapse-next-line
  "jq" 'avy-goto-word-0
@@ -428,8 +434,8 @@ _SPC_ cancel	_o_nly this   	_d_elete
   :config
   :init (add-hook 'prog-mode-hook 'global-company-mode)
   (setq company-tooltip-align-annotations t
-	company-minimum-prefix-length 2
-	company-idle-delay 0.1))
+        company-minimum-prefix-length 2
+        company-idle-delay 0.1))
 
 (with-eval-after-load 'company
   (define-key company-active-map (kbd "M-n") nil)
@@ -484,8 +490,8 @@ _SPC_ cancel	_o_nly this   	_d_elete
 (use-package company-tern)
 (add-to-list 'company-backends 'company-tern)
 (add-hook 'js2-mode-hook (lambda ()
-			   (tern-mode)
-			   (company-mode)))
+                           (tern-mode)
+                           (company-mode)))
 (define-key tern-mode-keymap (kbd "M-.") nil)
 (define-key tern-mode-keymap (kbd "M-,") nil)
 
@@ -510,6 +516,7 @@ _SPC_ cancel	_o_nly this   	_d_elete
 
 ;; ======== FLYCHECK ========
 (use-package flycheck
+  :defer t
   :init (global-flycheck-mode))
 
 (add-hook 'flycheck-mode-hook 'counsel-gtags-mode)
@@ -527,12 +534,12 @@ _SPC_ cancel	_o_nly this   	_d_elete
         (when (file-directory-p package-directory)
           (set (make-local-variable executable-var)
                (expand-file-name (concat "bin/" module ".js")
-package-directory)))))))
+                                 package-directory)))))))
 
 (defhydra hydra-flycheck
   (:pre (progn (setq hydra-lv t) (flycheck-list-errors))
-   :post (progn (setq hydra-lv nil) (quit-windows-on "*Flycheck errors*"))
-   :hint nil)
+        :post (progn (setq hydra-lv nil) (quit-windows-on "*Flycheck errors*"))
+        :hint nil)
   "Errors"
   ("f"  flycheck-error-list-set-filter                            "Filter")
   ("j"  flycheck-next-error                                       "Next")
@@ -542,11 +549,11 @@ package-directory)))))))
   ("q"  nil))
 
 ;; ======== GGTAGS ========
-;(use-package ggtags)
-;(add-hook 'c-mode-common-hook
-;	  (lambda ()
-;	    (when (derived-mode-p 'c-mode 'c++-mode 'java-mode 'asm-mode)
-;	      (ggtags-mode 1))))
+                                        ;(use-package ggtags)
+                                        ;(add-hook 'c-mode-common-hook
+                                        ;	  (lambda ()
+                                        ;	    (when (derived-mode-p 'c-mode 'c++-mode 'java-mode 'asm-mode)
+                                        ;	      (ggtags-mode 1))))
 
 
 ;; ======== COUNSEL GTAGS ========
@@ -565,81 +572,81 @@ package-directory)))))))
 (use-package all-the-icons)
 ;; fix for lag on windows when using all-the-icons
 (when (string-equal system-type "windows-nt") (setq inhibit-compacting-font-caches t))
-;(use-package spaceline)
-;(require 'spaceline-config)
-;(use-package spaceline-all-the-icons
-;  :after spaceline
-;  :config (spaceline-all-the-icons-theme))
-;(setq spaceline-all-the-icons-separator-type 'arrow) 
-  (use-package powerline
-    :ensure t
-    :config
+                                        ;(use-package spaceline)
+                                        ;(require 'spaceline-config)
+                                        ;(use-package spaceline-all-the-icons
+                                        ;  :after spaceline
+                                        ;  :config (spaceline-all-the-icons-theme))
+                                        ;(setq spaceline-all-the-icons-separator-type 'arrow) 
+(use-package powerline
+  :ensure t
+  :config
 
-    (defun make-rect (color height width)
-      "Create an XPM bitmap."
-      (when window-system
-        (propertize
-         " " 'display
-         (let ((data nil)
-               (i 0))
-           (setq data (make-list height (make-list width 1)))
-           (pl/make-xpm "percent" color color (reverse data))))))
-
-
-    (defun powerline-mode-icon ()
-      (let ((icon (all-the-icons-icon-for-buffer)))
-        (unless (symbolp icon) ;; This implies it's the major mode
-          (format " %s"
-                  (propertize icon
-                              'help-echo (format "Major-mode: `%s`" major-mode)
-                              'face `(:height 1.2 :family ,(all-the-icons-icon-family-for-buffer)))))))
+  (defun make-rect (color height width)
+    "Create an XPM bitmap."
+    (when window-system
+      (propertize
+       " " 'display
+       (let ((data nil)
+             (i 0))
+         (setq data (make-list height (make-list width 1)))
+         (pl/make-xpm "percent" color color (reverse data))))))
 
 
-    (setq-default mode-line-format 
-                  '("%e"
-                    (:eval
-                     (let* ((active (powerline-selected-window-active))
-                            (modified (buffer-modified-p))
-                            (face1 (if active 'powerline-active1 'powerline-inactive1))
-                            (face2 (if active 'powerline-active2 'powerline-inactive2))
-                            (bar-color (cond ((and active modified) (face-foreground 'error))
-                                             (active (face-background 'cursor))
-                                             (t (face-background 'tooltip))))
-                            (lhs (list
-                                  (make-rect bar-color 30 3)
-                                  (when modified
-                                    (concat
-                                     " "
-                                     (all-the-icons-faicon "floppy-o"
-                                                           :face (when active 'error)
-                                                           :v-adjust -0.01)))
-                                  " "
-                                  (powerline-buffer-id)
-                                  ))
-                            (center (list
-                                     " "
-                                     (powerline-mode-icon)
-                                     " "
-                                     (powerline-major-mode)
-                                     " "))
-                            (rhs (list
-                                  (format "%s" (eyebrowse--get 'current-slot))
-                                  " | "
-                                  (powerline-raw "%l:%c" 'face1 'r)
-                                  " | "
-                                  (powerline-raw "%6p" 'face1 'r)
-                                  (powerline-hud 'highlight 'region 1)
-                                  " "
-                                  ))
-                            )
-                       (concat
-                        (powerline-render lhs)
-                        ;; changed bg color - variables changed from face1/face2 to bar-color 
-                        (powerline-fill-center bar-color (/ (powerline-width center) 1.0)) ;;changed from 2.0 - seems to center better on yoga3
-                        (powerline-render center)
-                        (powerline-fill bar-color (powerline-width rhs))
-                        (powerline-render rhs))))))
-    )
+  (defun powerline-mode-icon ()
+    (let ((icon (all-the-icons-icon-for-buffer)))
+      (unless (symbolp icon) ;; This implies it's the major mode
+        (format " %s"
+                (propertize icon
+                            'help-echo (format "Major-mode: `%s`" major-mode)
+                            'face `(:height 1.2 :family ,(all-the-icons-icon-family-for-buffer)))))))
+
+
+  (setq-default mode-line-format 
+                '("%e"
+                  (:eval
+                   (let* ((active (powerline-selected-window-active))
+                          (modified (buffer-modified-p))
+                          (face1 (if active 'powerline-active1 'powerline-inactive1))
+                          (face2 (if active 'powerline-active2 'powerline-inactive2))
+                          (bar-color (cond ((and active modified) (face-foreground 'error))
+                                           (active (face-background 'cursor))
+                                           (t (face-background 'tooltip))))
+                          (lhs (list
+                                (make-rect bar-color 30 3)
+                                (when modified
+                                  (concat
+                                   " "
+                                   (all-the-icons-faicon "floppy-o"
+                                                         :face (when active 'error)
+                                                         :v-adjust -0.01)))
+                                " "
+                                (powerline-buffer-id)
+                                ))
+                          (center (list
+                                   " "
+                                   (powerline-mode-icon)
+                                   " "
+                                   (powerline-major-mode)
+                                   " "))
+                          (rhs (list
+                                (format "%s" (eyebrowse--get 'current-slot))
+                                " | "
+                                (powerline-raw "%l:%c" 'face1 'r)
+                                " | "
+                                (powerline-raw "%6p" 'face1 'r)
+                                (powerline-hud 'highlight 'region 1)
+                                " "
+                                ))
+                          )
+                     (concat
+                      (powerline-render lhs)
+                      ;; changed bg color - variables changed from face1/face2 to bar-color 
+                      (powerline-fill-center bar-color (/ (powerline-width center) 1.0)) ;;changed from 2.0 - seems to center better on yoga3
+                      (powerline-render center)
+                      (powerline-fill bar-color (powerline-width rhs))
+                      (powerline-render rhs))))))
+  )
 
 ;; ======== PROJECTILE ========
 (use-package projectile)
@@ -667,36 +674,37 @@ package-directory)))))))
 ;; auto-insert include guards in header files
 ;; autoinsert C/C++ header
 (define-auto-insert
-    (cons "\\.\\([Hh]\\|hh\\|hpp\\)\\'" "My C/C++ header")
-    '(nil
-      (let* ((noext (substring buffer-file-name 0 (match-beginning 0)))
-                 (nopath (file-name-nondirectory noext))
-                 (ident (concat (upcase nopath) "_H_")))
-        (concat "#ifndef " ident "\n"
-                        "#define " ident "\n\n\n"
-                        "\n\n#endif // " ident "\n"))
-      ))
+  (cons "\\.\\([Hh]\\|hh\\|hpp\\)\\'" "My C/C++ header")
+  '(nil
+    (let* ((noext (substring buffer-file-name 0 (match-beginning 0)))
+           (nopath (file-name-nondirectory noext))
+           (ident (concat (upcase nopath) "_H_")))
+      (concat "#ifndef " ident "\n"
+              "#define " ident "\n\n\n"
+              "\n\n#endif // " ident "\n"))
+    ))
 
 (add-hook 'find-file-hook 'auto-insert)
 
 (add-hook 'c-mode-hook (lambda()
                          (setq company-backends '(company-clang company-dabbrev-code company-keywords company-yasnippet company-files company-dabbrev))
                          (company-mode 1)
-(global-set-key [C-return] 'company-complete-common)))
+                         (global-set-key [C-return] 'company-complete-common)))
 
-; Don't ask to reload TAGS if newer, just do it
+                                        ; Don't ask to reload TAGS if newer, just do it
 (setq tags-revert-without-query 1)
 
 (defhydra hydra-c (:color red
-                   :hint nil)
-"
+                          :hint nil)
+  "
 _f_ flycheck
 "
-("f" hydra-flycheck/body :exit t)
-)
+  ("f" hydra-flycheck/body :exit t)
+  )
 
 ;; ======== JAVASCRIPT ========
-(use-package js2-mode)
+(use-package js2-mode
+  :defer t)
 (add-to-list 'auto-mode-alist '("\\.js\\'\\|\\.json\\'" . js2-mode)) 
 ;; better imenu
 (add-hook 'js2-mode-hook #'js2-imenu-extras-mode) 
@@ -729,7 +737,7 @@ _f_ flycheck
 (add-hook 'js2-mode-hook 'flycheck-mode)
 (add-hook 'js2-mode-hook #'js2-refactor-mode)
 (add-hook 'js2-mode-hook (lambda ()
-  (add-hook 'xref-backend-functions #'xref-js2-xref-backend nil t)))
+                           (add-hook 'xref-backend-functions #'xref-js2-xref-backend nil t)))
 (add-hook 'js2-mode-hook 'add-node-modules-path)
 
 ;; indium
@@ -776,7 +784,7 @@ _f_ flycheck
 
 ;; js2-refactor hydra
 (defhydra js2-refactor-hydra (:color blue :hint nil)
-    "
+  "
 ^Functions^                    ^Variables^               ^Buffer^                      ^sexp^               ^Debugging^
 ------------------------------------------------------------------------------------------------------------------------------
 [_lp_] Localize Parameter      [_ev_] Extract variable   [_wi_] Wrap buffer in IIFE    [_k_]  js2 kill      [_lt_] log this
@@ -817,21 +825,22 @@ _f_ flycheck
 )
 
 (defhydra hydra-javascript (:color red
-                            :hint nil)
-"
+                                   :hint nil)
+  "
 _'_ → REPL     _f_ → flycheck     _in_ → indium node      _r_ → refactor
 _j_ jump (imenu)                  _ic_ → indium chrome
 "
-("'" spacemacs/skewer-start-repl :exit t)
-("f" hydra-flycheck/body :exit t)
-("in" indium-run-node :exit t)
-("ic" indium-connect-to-chrome :exit t)
-("j" counsel-imenu :exit t)
-("r" js2-refactor-hydra/body :exit t)
-)
+  ("'" spacemacs/skewer-start-repl :exit t)
+  ("f" hydra-flycheck/body :exit t)
+  ("in" indium-run-node :exit t)
+  ("ic" indium-connect-to-chrome :exit t)
+  ("j" counsel-imenu :exit t)
+  ("r" js2-refactor-hydra/body :exit t)
+  )
 
 ;; ======== TYPESCRIPT ========
-(use-package tide)
+(use-package tide
+  :defer t)
 (defun setup-tide-mode ()
   (interactive)
   (tide-setup)
@@ -859,7 +868,7 @@ _j_ jump (imenu)                  _ic_ → indium chrome
 
 (defhydra hydra-typescript (:color red
                                    :hint nil)
-"
+  "
 _d_ → doc at point      _f_ → format       _r_ → refactor
 _s_ → list references   _a_ → apply fix    _j_ → jsdoc comment
 _i_ → organize imports
@@ -871,10 +880,11 @@ _i_ → organize imports
   ("r" tide-refactor)
   ("j" tide-jsdoc-template)
   ("i" tide-organize-imports) 
- )
+  )
 
 ;; ======== PHP ========
-(use-package php-mode)
+(use-package php-mode
+  :defer t)
 (use-package company-php)
 (add-to-list 'auto-mode-alist '("\\.php\\'" . php-mode))
 (add-hook 'php-mode-hook
@@ -891,7 +901,8 @@ _i_ → organize imports
 (sp-local-pair 'php-mode "{" nil :post-handlers '((my-create-newline-and-enter-sexp "RET")))
 
 ;; tool to test HTTP REST webservices
-(use-package restclient)
+(use-package restclient
+  :defer t)
 (defun start-restclient ()
   (interactive)
   (let ((buf (generate-new-buffer "restclient")))
@@ -901,15 +912,16 @@ _i_ → organize imports
 
 
 ;; ======== WEB MODE ========
-(use-package web-mode)
+(use-package web-mode
+  :defer t)
 (add-to-list 'auto-mode-alist '("\\.phtml\\'" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.tpl\\.php\\'" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.html\\.twig\\'" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
 
 (add-hook 'web-mode-hook (lambda ()
-                          (set (make-local-variable 'company-backends) '(company-web-html))
-                          (company-mode t)))
+                           (set (make-local-variable 'company-backends) '(company-web-html))
+                           (company-mode t)))
 (add-hook 'web-mode-hook #'smartparens-mode)
 (add-hook 'web-mode-hook #'evil-smartparens-mode)
 
@@ -920,11 +932,11 @@ _i_ → organize imports
 ;; set up connection list
 (setq sql-connection-alist
       '((casesdev (sql-product 'mysql)
-                 (sql-port 3306)
-                 (sql-server "dev.cluster-cpqhbit12kdd.us-east-1.rds.amazonaws.com")
-                 (sql-user "rsnards")
-                 (sql-password "RSNA1915")
-                 (sql-database "case_repository"))
+                  (sql-port 3306)
+                  (sql-server "dev.cluster-cpqhbit12kdd.us-east-1.rds.amazonaws.com")
+                  (sql-user "rsnards")
+                  (sql-password "RSNA1915")
+                  (sql-database "case_repository"))
         (casesstage (sql-product 'mysql)
                     (sql-port 3306)
                     (sql-server "stage.cluster-cpqhbit12kdd.us-east-1.rds.amazonaws.com")
@@ -961,7 +973,8 @@ _i_ → organize imports
             (define-key emacs-lisp-mode-map "\C-x\C-e" 'pp-eval-last-sexp)))
 
 ;; testing - suggest.el https://github.com/Wilfred/suggest.el
-(use-package suggest)
+(use-package suggest
+  :defer t)
 
 ;; eldoc - provides minibuffer hints when working in elisp
 (use-package "eldoc"
@@ -970,23 +983,23 @@ _i_ → organize imports
   :defer t
   :init
   (progn
-  (add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode)
-  (add-hook 'lisp-interaction-mode-hook 'turn-on-eldoc-mode)
-  (add-hook 'ielm-mode-hook 'turn-on-eldoc-mode)))
+    (add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode)
+    (add-hook 'lisp-interaction-mode-hook 'turn-on-eldoc-mode)
+    (add-hook 'ielm-mode-hook 'turn-on-eldoc-mode)))
 
 (defhydra hydra-elisp (:color red
-                       :hint nil)
-"
+                              :hint nil)
+  "
 _eb_ eval buffer
 _er_ eval region
 _es_ eval sexp
 _f_ flycheck
 "
-("eb" eval-buffer)
-("er" eval-region)
-("es" pp-eval-last-sexp)
-("f" hydra-flycheck/body :exit t)
-)
+  ("eb" eval-buffer)
+  ("er" eval-region)
+  ("es" pp-eval-last-sexp)
+  ("f" hydra-flycheck/body :exit t)
+  )
 
 ;; ======== COMMON LISP ========
 (load (expand-file-name "~/quicklisp/slime-helper.el"))
@@ -999,7 +1012,7 @@ _f_ flycheck
                             (use-package slime-company)
                             (company-mode t)))
 
-;(setq slime-contribs '(slime-fancy slime-company))
+                                        ;(setq slime-contribs '(slime-fancy slime-company))
 (slime-setup '(slime-fancy slime-company))
 
 (add-hook 'lisp-mode-hook #'smartparens-mode)
@@ -1112,9 +1125,13 @@ _f_ flycheck
 
 
 ;; ======== RACKET ========
-(use-package racket-mode)
-(use-package quack)
-(use-package scribble-mode)
+(use-package racket-mode
+  :defer t)
+;; TODO wouldn't quack interfere with racket mode? i had them both active without problem seemingly...
+;; (use-package quack
+;;   :after racket-mode)
+(use-package scribble-mode
+  :defer t)
 (add-to-list 'auto-mode-alist '("\\.rkt\\'" . racket-mode)) 
 
 ;; setup smartparens and cleverparens
@@ -1146,7 +1163,6 @@ _f_ flycheck
 
 (define-key magit-status-mode-map (kbd "q") 'magit-quit-session)
 
-
 ;; ======== HELPFUL ========
 (use-package helpful)
 
@@ -1165,7 +1181,7 @@ _f_ flycheck
 (when (use-package markdown-mode)
   (add-to-list 'auto-mode-alist '("\\.md\\.html\\'" . markdown-mode))
   (after-load 'whitespace-cleanup-mode
-(push 'markdown-mode whitespace-cleanup-mode-ignore-modes)))
+              (push 'markdown-mode whitespace-cleanup-mode-ignore-modes)))
 
 (defhydra hydra-markdown (:hint nil)
   "
@@ -1206,7 +1222,7 @@ Links, footnotes  C-c C-a    _L_: link          _U_: uri        _F_: footnote   
   ("F" markdown-insert-footnote :color blue)
   ("W" markdown-insert-wiki-link :color blue)
   ("R" markdown-insert-reference-link-dwim :color blue) 
-)
+  )
 
 
 ;; ======== ORG-MODE ========
@@ -1239,7 +1255,7 @@ Links, footnotes  C-c C-a    _L_: link          _U_: uri        _F_: footnote   
          "* %?   \n  %i\n  %u\n  %a")
         ("j" "Journal" entry (file+datetree "~/Dropbox/org/journal.org")
          "* %?\nEntered on %U\n %i\n %a")
-    ("J" "Work-Journal" entry (file+datetree "~/Dropbox/org/wjournal.org")
+        ("J" "Work-Journal" entry (file+datetree "~/Dropbox/org/wjournal.org")
          "* %?\nEntered on %U\n %i\n %a")
         ))
 (setq org-irc-link-to-logs t)
@@ -1248,26 +1264,26 @@ Links, footnotes  C-c C-a    _L_: link          _U_: uri        _F_: footnote   
 (setq org-log-done 'time)
 
 ;; configure which files to use in org-agenda
- (setq org-agenda-files (list "~/Dropox/org/inbox.org"
-                               "~/Dropox/org/email.org"
-                               "~/Dropox/org/tasks.org"
-                               "~/Dropox/org/wtasks.org"
-                               "~/Dropox/org/journal.org"
-                               "~/Dropox/org/wjournal.org"
-                               "~/Dropox/org/kb.org"
-                               "~/Dropox/org/wkb.org"
-  ))
-  (setq org-agenda-text-search-extra-files
-        (list "~/Dropox/org/someday.org"
-              "~/Dropbox/org/config.org"
-  ))
+(setq org-agenda-files (list "~/Dropox/org/inbox.org"
+                             "~/Dropox/org/email.org"
+                             "~/Dropox/org/tasks.org"
+                             "~/Dropox/org/wtasks.org"
+                             "~/Dropox/org/journal.org"
+                             "~/Dropox/org/wjournal.org"
+                             "~/Dropox/org/kb.org"
+                             "~/Dropox/org/wkb.org"
+                             ))
+(setq org-agenda-text-search-extra-files
+      (list "~/Dropox/org/someday.org"
+            "~/Dropbox/org/config.org"
+            ))
 
-  (setq org-refile-targets '((nil :maxlevel . 2)
-                             (org-agenda-files :maxlevel . 2)
-                             ("~/Dropbox/org/someday.org" :maxlevel . 2)
-                             ("~/Dropbox/org/templates.org" :maxlevel . 2)
-                             )
-        )
+(setq org-refile-targets '((nil :maxlevel . 2)
+                           (org-agenda-files :maxlevel . 2)
+                           ("~/Dropbox/org/someday.org" :maxlevel . 2)
+                           ("~/Dropbox/org/templates.org" :maxlevel . 2)
+                           )
+      )
 (setq org-outline-path-complete-in-steps nil)         ; Refile in a single go
 (setq org-refile-use-outline-path 'file)
 
@@ -1355,7 +1371,7 @@ _vr_ reset      ^^                       ^^                 ^^
 ;; ======== EDITOR MACROS ========
 (defhydra hydra-macro (:hint nil :color pink :pre 
                              (when defining-kbd-macro
-                                 (kmacro-end-macro 1)))
+                               (kmacro-end-macro 1)))
   "
   ^Create-Cycle^   ^Basic^           ^Insert^        ^Save^         ^Edit^
 ╭─────────────────────────────────────────────────────────────────────────╯
@@ -1390,15 +1406,15 @@ _vr_ reset      ^^                       ^^                 ^^
 
 ;; ======== THEMES/COLOR MODS ========
 ;; theme packages
-;(use-package kaolin-themes)
-;(use-package afternoon-theme)
-;(use-package gruvbox-theme)
-;(use-package nord-theme)
-;(use-package oceanic-theme)
-;(use-package liso-theme)
-;(use-package challenger-deep-theme)
-;(use-package creamsody-theme)
-;(use-package material-theme)
+                                        ;(use-package kaolin-themes)
+                                        ;(use-package afternoon-theme)
+                                        ;(use-package gruvbox-theme)
+                                        ;(use-package nord-theme)
+                                        ;(use-package oceanic-theme)
+                                        ;(use-package liso-theme)
+                                        ;(use-package challenger-deep-theme)
+                                        ;(use-package creamsody-theme)
+                                        ;(use-package material-theme)
 
 ;; additional syntax highlighting
 ;; highlights elisp symbols
@@ -1466,13 +1482,13 @@ _vr_ reset      ^^                       ^^                 ^^
   (indent-according-to-mode))
 
 (defun sp-paredit-like-close-round ()
-      "If the next character is a closing character as according to smartparens skip it, otherwise insert `last-input-event'."
-      (interactive)
-      (let ((pt (point)))
-        (if (and (< pt (point-max))
-                 (sp--char-is-part-of-closing (buffer-substring-no-properties pt (1+ pt))))
-            (forward-char 1)
-          (call-interactively #'self-insert-command))))
+  "If the next character is a closing character as according to smartparens skip it, otherwise insert `last-input-event'."
+  (interactive)
+  (let ((pt (point)))
+    (if (and (< pt (point-max))
+             (sp--char-is-part-of-closing (buffer-substring-no-properties pt (1+ pt))))
+        (forward-char 1)
+      (call-interactively #'self-insert-command))))
 
 (defun hydra-by-major-mode ()
   "Selects specific hydra to be used based on major mode."
