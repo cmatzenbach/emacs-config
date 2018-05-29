@@ -1065,16 +1065,16 @@ Links, footnotes  C-c C-a    _L_: link          _U_: uri        _F_: footnote   
             (org-bullets-mode t)))
 (setq org-ellipsis "⤵")
 
-(setq org-default-notes-file "~/org/tasks.org")
+(setq org-default-notes-file "~/Dropbox/org/tasks.org")
 (setq org-capture-templates
       '(
-        ("t" "Todo" entry (file+headline "inbox.org" "Tasks")
+        ("t" "Todo" entry (file+headline "~/Dropbox/org/inbox.org" "Tasks")
          "* TODO %?\n  %i\n  %u\n  %a")
-        ("n" "Note/Data" entry (file+headline "inbox.org" "Notes/Data")
+        ("n" "Note/Data" entry (file+headline "~/Dropbox/org/inbox.org" "Notes/Data")
          "* %?   \n  %i\n  %u\n  %a")
-        ("j" "Journal" entry (file+datetree "~/org/journal.org")
+        ("j" "Journal" entry (file+datetree "~/Dropbox/org/journal.org")
          "* %?\nEntered on %U\n %i\n %a")
-        ("J" "Work-Journal" entry (file+datetree "~/org/wjournal.org")
+    ("J" "Work-Journal" entry (file+datetree "~/Dropbox/org/wjournal.org")
          "* %?\nEntered on %U\n %i\n %a")
         ))
 (setq org-irc-link-to-logs t)
@@ -1083,24 +1083,24 @@ Links, footnotes  C-c C-a    _L_: link          _U_: uri        _F_: footnote   
 (setq org-log-done 'time)
 
 ;; configure which files to use in org-agenda
- (setq org-agenda-files (list "~/org/inbox.org"
-                               "~/org/email.org"
-                               "~/org/tasks.org"
-                               "~/org/wtasks.org"
-                               "~/org/journal.org"
-                               "~/org/wjournal.org"
-                               "~/org/kb.org"
-                               "~/org/wkb.org"
+ (setq org-agenda-files (list "~/Dropox/org/inbox.org"
+                               "~/Dropox/org/email.org"
+                               "~/Dropox/org/tasks.org"
+                               "~/Dropox/org/wtasks.org"
+                               "~/Dropox/org/journal.org"
+                               "~/Dropox/org/wjournal.org"
+                               "~/Dropox/org/kb.org"
+                               "~/Dropox/org/wkb.org"
   ))
   (setq org-agenda-text-search-extra-files
-        (list "~/org/someday.org"
-              "~/org/config.org"
+        (list "~/Dropox/org/someday.org"
+              "~/Dropbox/org/config.org"
   ))
 
   (setq org-refile-targets '((nil :maxlevel . 2)
                              (org-agenda-files :maxlevel . 2)
-                             ("~/org/someday.org" :maxlevel . 2)
-                             ("~/org/templates.org" :maxlevel . 2)
+                             ("~/Dropbox/org/someday.org" :maxlevel . 2)
+                             ("~/Dropbox/org/templates.org" :maxlevel . 2)
                              )
         )
 (setq org-outline-path-complete-in-steps nil)         ; Refile in a single go
