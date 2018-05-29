@@ -302,6 +302,7 @@ _SPC_ cancel	_o_nly this   	_d_elete
  "aob" 'org-switchb
  "aoc" 'org-capture
  "aol" 'org-store-link
+ "ar" 'start-restclient
 
  ;; buffers
  "b" '(:ignore t :which-key "Buffers")
@@ -372,6 +373,13 @@ _SPC_ cancel	_o_nly this   	_d_elete
 
  "m" 'hydra-by-major-mode
 
+ ;; org
+ "o" '(:ignore t :which-key "Org")
+ "oa" 'org-agenda
+ "ob" 'org-switchb
+ "oc" 'org-capture
+ "ol" 'org-store-link
+
  ;; projectile
  ;; bind p to be the prefix for opening the map of projectile commands
  "p" '(:keymap projectile-command-map :package projectile :which-key "Project")
@@ -429,6 +437,48 @@ _SPC_ cancel	_o_nly this   	_d_elete
   (define-key company-active-map (kbd "C-j") #'company-select-next)
   (define-key company-active-map (kbd "C-k") #'company-select-previous)
   (define-key company-active-map (kbd "C-l") #'company-complete))
+
+;; Company Box (pretty front-end with icons)
+;; (use-package company-box
+;;   :hook (company-mode . company-box-mode))
+;; (add-to-list 'load-path "~/.local/share/icons-in-terminal/icons-in-terminal.el")
+;; (setq company-box-icons-unknown 'fa_question_circle)
+
+;; (setq company-box-icons-elisp
+;;    '((fa_tag :face font-lock-function-name-face) ;; Function
+;;      (fa_cog :face font-lock-variable-name-face) ;; Variable
+;;      (fa_cube :face font-lock-constant-face) ;; Feature
+;;      (md_color_lens :face font-lock-doc-face))) ;; Face
+
+;; (setq company-box-icons-yasnippet 'fa_bookmark)
+
+;; (setq company-box-icons-lsp
+;;       '((1 . fa_text_height) ;; Text
+;;         (2 . (fa_tags :face font-lock-function-name-face)) ;; Method
+;;         (3 . (fa_tag :face font-lock-function-name-face)) ;; Function
+;;         (4 . (fa_tag :face font-lock-function-name-face)) ;; Constructor
+;;         (5 . (fa_cog :foreground "#FF9800")) ;; Field
+;;         (6 . (fa_cog :foreground "#FF9800")) ;; Variable
+;;         (7 . (fa_cube :foreground "#7C4DFF")) ;; Class
+;;         (8 . (fa_cube :foreground "#7C4DFF")) ;; Interface
+;;         (9 . (fa_cube :foreground "#7C4DFF")) ;; Module
+;;         (10 . (fa_cog :foreground "#FF9800")) ;; Property
+;;         (11 . md_settings_system_daydream) ;; Unit
+;;         (12 . (fa_cog :foreground "#FF9800")) ;; Value
+;;         (13 . (md_storage :face font-lock-type-face)) ;; Enum
+;;         (14 . (md_closed_caption :foreground "#009688")) ;; Keyword
+;;         (15 . md_closed_caption) ;; Snippet
+;;         (16 . (md_color_lens :face font-lock-doc-face)) ;; Color
+;;         (17 . fa_file_text_o) ;; File
+;;         (18 . md_refresh) ;; Reference
+;;         (19 . fa_folder_open) ;; Folder
+;;         (20 . (md_closed_caption :foreground "#009688")) ;; EnumMember
+;;         (21 . (fa_square :face font-lock-constant-face)) ;; Constant
+;;         (22 . (fa_cube :face font-lock-type-face)) ;; Struct
+;;         (23 . fa_calendar) ;; Event
+;;         (24 . fa_square_o) ;; Operator
+;;         (25 . fa_arrows)) ;; TypeParameter
+;;       )
 
 ;; Company Tern
 (use-package company-tern)
@@ -842,6 +892,12 @@ _i_ → organize imports
 
 ;; tool to test HTTP REST webservices
 (use-package restclient)
+(defun start-restclient ()
+  (interactive)
+  (let ((buf (generate-new-buffer "restclient")))
+    (switch-to-buffer buf)
+    (restclient-mode)
+    buf))
 
 
 ;; ======== WEB MODE ========
@@ -1053,13 +1109,19 @@ Links, footnotes  C-c C-a    _L_: link          _U_: uri        _F_: footnote   
 ;; ======== ORG-MODE ========
 (use-package org)
 (setq org-M-RET-may-split-line nil)
+;; get code block syntax highlighting in HTML export
+(setq org-src-fontify-natively t)
+
+;; auto-org-md - automatically export a markdown file when saving an org file
+(use-package auto-org-md
+  :defer t)
 
 ;; use uuid's for org links
-;; (require org-id)
-;; (setq org-id-link-to-org-use-id 'create-if-interactive)
+(require 'org-id)
+(setq org-id-link-to-org-use-id 'create-if-interactive)
 
 ;; beautify org-mode
-;(use-package'org-bullets)
+(use-package org-bullets)
 (add-hook 'org-mode-hook
           (lambda ()
             (org-bullets-mode t)))
@@ -1465,7 +1527,7 @@ Consider only documented, non-obsolete functions."
  '(linum-format " %5i ")
  '(package-selected-packages
    (quote
-    (skewer-mode skewer markdown-mode hydra org-bullets slime magit nord-theme eyebrowse evil-collection solarized-theme evil-magit ac-php company-php php-mode evil-cleverparens evil-smartparens smartparens tide indium js2-mode smart-mode-line sublime-themes counsel general evil)))
+    (auto-org-md org-id company-box skewer-mode skewer markdown-mode hydra org-bullets slime magit nord-theme eyebrowse evil-collection solarized-theme evil-magit ac-php company-php php-mode evil-cleverparens evil-smartparens smartparens tide indium js2-mode smart-mode-line sublime-themes counsel general evil)))
  '(sp-highlight-pair-overlay nil))
 
 (custom-set-faces
