@@ -1007,6 +1007,109 @@ _f_ flycheck
 (add-hook 'lisp-mode-hook #'evil-cleverparens-mode)
 (add-hook 'lisp-mode-hook #'highlight-quoted-mode)
 
+;;; Set of hydra menus to work with Slime.
+;;; vindarel 2017
+;;; copyleft
+
+;; (defhydra slime-hydra (:color red)
+;;     "
+;;      Slime
+;; "
+;;     ("." slime-edit-definition "edit definition")
+;;     ("," slime-pop-find-definition-stack "return from definition")
+;;     ("s" slime-selector-hydra/body "selector" :color blue)
+;;     ;; evaluation
+;;     ;; debugging
+;;     ;; compilation
+;;     ;; cross reference
+;;     ;; editing
+;;     ;; …
+;;     )
+
+;; (defun slime-selector-call-by-key (key)
+;;   "Call a slime-selector function associated with the given KEY."
+;;   ;; Strangely, this code is obscured in slime.el. Functions are not
+;;   ;; defined by name.
+;;   (funcall (cl-third (cl-find key slime-selector-methods :key #'car))))
+
+;; (defhydra slime-selector-hydra (:color red
+;;                                 :columns 4)
+;;   " Slime selector "
+;;   ("4" (slime-selector-call-by-key ?4) "other window")
+;;   ("c" (slime-selector-call-by-key ?c) "connections buffer")
+;;   ("d" (slime-selector-call-by-key ?d) "*sldb* buffer for the current connection")
+;;   ("e" (slime-selector-call-by-key ?e) "most recently emacs-lisp-mode buffer")
+;;   ("i" (slime-selector-call-by-key ?i) "*inferior-lisp* buffer")
+;;   ("l" (slime-selector-call-by-key ?l) "most recently visited lisp-mode buffer")
+;;   ("n" (slime-selector-call-by-key ?n) "next Lisp connection")
+;;   ("p" (slime-selector-call-by-key ?p) "previous Lisp connection")
+;;   ("r" (slime-selector-call-by-key ?r) "REPL")
+;;   ("s" (slime-selector-call-by-key ?s) "*slime-scratch* buffer")
+;;   ("t" (slime-selector-call-by-key ?t) "threads buffer")
+;;   ("v" (slime-selector-call-by-key ?v) "*slime-events* buffer")
+;;   ("q" nil "quit")
+;;   ("S" slime-hydra/body "Slime hydra" :color blue)
+;;   )
+
+
+  ;; TODO: Add Debug Hydra
+  (defhydra hydra-slime-compile (:color blue :columns 3)
+    "Compile"
+    ("c" slime-compile-file "Compile")
+    ("C" slime-compile-and-load-file "Compile and Load")
+    ("l" slime-load-file "Load File")
+    ("f" slime-compile-defun "Compile Defun")
+    ("r" slime-compile-region "Compile Region")
+    ("n" slime-remove-notes "Remove Notes"))
+
+  (defhydra hydra-slime-eval (:color blue :columns 3)
+    "Eval"
+    ("b" slime-eval-buffer "Buffer")
+    ("f" slime-eval-defun "Defun")
+    ("F" slime-undefine-function "Undefine Function")
+    ("e" slime-eval-last-expression "Last Sexp")
+    ("r" slime-eval-region "Region"))
+
+  (defhydra hydra-slime-help (:color blue :columns 3)
+    "Help"
+    ("a" slime-apropos "Apropros")
+    ("A" slime-apropos-all "Apropros All")
+    ("d" slime-disassemble-symbol "Disassemble")
+    ("h" slime-describe-symbol "Describe Symbol")
+    ("H" slime-hyperspec-lookup "Hyperspec Lookup")
+    ("p" slime-apropos-package "Apropos Package")
+    ("t" slime-toggle-trace-fdefinition "Toggle Trace Fdefinition")
+    ("T" slime-untrace-all "Untrace All")
+    ("<" slime-who-calls "Who Calls")
+    (">" slime-calls-who "Calls Who")
+    ;; TODO: Add key bindings for who binds/sets globals?
+    ("r" slime-who-references "Who References")
+    ("m" slime-who-macroexpands "Who Macroexpands")
+    ("s" slime-who-specializes "Who Specializes"))
+
+  (defhydra hydra-slime-navigate (:color blue :columns 3)
+    "Navigate"
+    ("g" slime-edit-definition "Find Definition")
+    ("b" slime-pop-find-definition-stack "Find Definition Pop")
+    ("n" slime-next-note "Next Note")
+    ("p" slime-previous-note "Previous Note")
+    ("r" slime-who-references "Who References")
+    ("m" slime-who-macroexpands "Who Macroexpands")
+    ("s" slime-who-specializes "Who Specializes"))
+
+  (defhydra hydra-slime-mode (:color blue :columns 3)
+    "Slime"
+    ("e" hydra-slime-eval/body "Eval")
+    ("h" hydra-slime-help/body "Help")
+    ("g" hydra-slime-navigate/body "Navigate")
+    ("x" slime-scratch "Scratch")
+    ("ma" slime-macroexpand-all "Macroexpand All")
+    ("mo" slime-macroexpand-1 "Macroexpand One")
+    ("se" slime-eval-last-expression-in-repl "Eval Last Expression in Repl")
+    ("si" slime "Slime")
+    ("sq" slime-quit-lisp "Quit Lisp")
+("tf" slime-toggle-fancy-trace "Toggle Fancy Trace"))
+
 
 ;; ======== RACKET ========
 (use-package racket-mode)
@@ -1388,6 +1491,8 @@ _vr_ reset      ^^                       ^^                 ^^
      (hydra-markdown/body))
     (org-agenda-mode
      (hydra-org-agenda/body))
+    (lisp-mode
+     (hydra-slime-mode/body))
     (t
      (error "%S not supported" major-mode))))
 
