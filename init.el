@@ -58,7 +58,7 @@
 ;; always download packages if not already installed
 (setq use-package-always-ensure t)
 ;; TESTING enable imenu support for use-package
-(setq use-package-enable-imenu-support t)
+;; (setq use-package-enable-imenu-support t)
 
 
 ;; ======== LOCAL CONFIG FILES ========
@@ -283,8 +283,6 @@ _SPC_ cancel	_o_nly this   	_d_elete
 ;;                  :around-key "a"
 ;;                  :remote-key nil))
 
-;; ======== HYDRA ========
-(use-package hydra)
 
 ;; ======== WHICH-KEY && GENERAL ========
 (use-package which-key :config (which-key-mode 1))
@@ -438,8 +436,9 @@ _SPC_ cancel	_o_nly this   	_d_elete
 
 ;; ======== COMPANY ========
 (use-package company
+  :init
+  (add-hook 'prog-mode-hook 'global-company-mode)
   :config
-  :init (add-hook 'prog-mode-hook 'global-company-mode)
   (setq company-tooltip-align-annotations t
         company-minimum-prefix-length 2
         company-idle-delay 0.1))
@@ -505,6 +504,9 @@ _SPC_ cancel	_o_nly this   	_d_elete
 ;; Company Quickhelp
 ;; adds documentation pop-ups to company-mode
 (use-package company-quickhelp)
+(company-quickhelp-mode)
+(eval-after-load 'company
+  '(define-key company-active-map (kbd "C-c h") #'company-quickhelp-manual-begin))
 
 
 ;; ======== YASNIPPET ========
@@ -724,7 +726,8 @@ _f_ flycheck
 (define-key js2-mode-map (kbd "C-k") #'js2r-kill)
 
 ;; add-node-modules-path retrives binaries from node_modules for things like eslint
-(use-package add-node-modules-path)
+(use-package add-node-modules-path
+  :after js2-mode)
 
 ;; js-mode (which js2 is based on) binds "M-." which conflicts with xref, so
 ;; unbind it.
@@ -843,16 +846,6 @@ _f_ flycheck
 
 
 ;; ======== TYPESCRIPT ========
-;; (use-package tide
-;;   :defer t)
-(use-package tide
-  :defer t
-  ;; :config
-  ;; (progn
-  ;;   (add-hook 'typescript-mode-hook #'setup-tide-mode)
-  ;;   (add-hook 'rjsx-mode-hook #'setup-tide-mode))
-  )
-
 (defun setup-tide-mode ()
   (interactive)
   (tide-setup)
@@ -860,23 +853,23 @@ _f_ flycheck
   (setq flycheck-check-syntax-automatically '(save mode-enabled))
   (eldoc-mode +1)
   (tide-hl-identifier-mode +1)
-  ;; company is an optional dependency. You have to
-  ;; install it separately via package-install
-  ;; `M-x package-install [ret] company`
   (company-mode +1)) 
 
-;; add completion details
-(setq tide-completion-detailed t)
-;; aligns annotation to the right hand side
-(setq company-tooltip-align-annotations t)
+(use-package tide
+  :config
+  (setq company-tooltip-align-annotations t)
+  (setq tide-completion-detailed t)
+  (add-hook 'before-save-hook 'tide-format-before-save)
+  (add-hook 'typescript-mode-hook #'setup-tide-mode)
+
+(add-to-list 'company-backends 'company-tide)
+  )
 
 ;; configure smartparens
 (add-hook 'typescript-mode-hook #'smartparens-mode)
 (add-hook 'typescript-mode-hook #'evil-smartparens-mode)
 (sp-local-pair 'typescript-mode "{" nil :post-handlers '((my-create-newline-and-enter-sexp "RET")))
-(add-hook 'typescript-mode-hook #'setup-tide-mode)
-;; (add-hook 'rjsx-mode-hook #'setup-tide-mode)
-(add-hook 'typescript-mode-hook 'add-node-modules-path)
+;; (add-hook 'typescript-mode-hook #'setup-tide-mode)
 
 (defhydra hydra-typescript (:color red
                                    :hint nil)
