@@ -77,7 +77,7 @@
 (load "let-alist-1.0.5.el")
 (load "highlight-escape-sequences.el")
 (load "highlight-quoted.el")
-(load "evil-evilified-state.el")
+;; (load "evil-evilified-state.el")
 
 
 ;; ======== COUNSEL/IVY/SWIPER ========
@@ -120,7 +120,7 @@
 
 ;; load evil-evilified-state (from author of spacemacs)
 ;; (load-user-file "evil-evilified-state.el")
-(require 'evil-evilified-state)
+;; (require 'evil-evilified-state)
 
 ;; ;; use esc to exit minibuffer
 ;; (defun minibuffer-keyboard-quit ()
@@ -433,7 +433,8 @@ _SPC_ cancel	_o_nly this   	_d_elete
 
 
 ;; ======== HYDRA ========
-(use-package hydra)
+(use-package hydra
+  :defer t)
 
 ;; ======== COMPANY ========
 (use-package company
@@ -504,7 +505,6 @@ _SPC_ cancel	_o_nly this   	_d_elete
 ;; Company Quickhelp
 ;; adds documentation pop-ups to company-mode
 (use-package company-quickhelp)
-(company-quickhelp-mode)
 
 
 ;; ======== YASNIPPET ========
@@ -719,13 +719,7 @@ _f_ flycheck
 (use-package js2-refactor
   :defer t)
 (js2r-add-keybindings-with-prefix "C-c C-m")
-(define-key js2-mode-map (kbd "C-c r") #'js2-refactor-hydra/body)
-;; (use-package js2-refactor
-;;   :defer t
-;;   :commands (js2r-add-keybindings-with-prefix)
-;;   :init (after :js2-mode
-;;           (js2r-add-keybindings-with-prefix "SPC m r")
-;;           (add-hook 'js2-mode-hook 'js2-refactor-mode)))
+
 (use-package xref-js2)
 (define-key js2-mode-map (kbd "C-k") #'js2r-kill)
 
@@ -833,8 +827,11 @@ _f_ flycheck
 (defhydra hydra-javascript (:color red
                                    :hint nil)
   "
-_'_ → REPL     _f_ → flycheck     _in_ → indium node      _r_ → refactor
-_j_ jump (imenu)                  _ic_ → indium chrome
+^REPL/Indium^             ^Errors^                  ^Buffer^                      ^Refactor^               ^Something^
+------------------------------------------------------------------------------------------------------------------------
+[_'_]  Skewer REPL        [_f_] Flycheck            [_j_]  Jump (imenu)           [_r_]  refactor        
+[_in_] Indium node
+[_ic_] Indium chrome
 "
   ("'" spacemacs/skewer-start-repl :exit t)
   ("f" hydra-flycheck/body :exit t)
@@ -850,10 +847,11 @@ _j_ jump (imenu)                  _ic_ → indium chrome
 ;;   :defer t)
 (use-package tide
   :defer t
-  :config
-  (progn
-    (add-hook 'typescript-mode-hook #'setup-tide-mode)
-    (add-hook 'rjsx-mode-hook #'setup-tide-mode)))
+  ;; :config
+  ;; (progn
+  ;;   (add-hook 'typescript-mode-hook #'setup-tide-mode)
+  ;;   (add-hook 'rjsx-mode-hook #'setup-tide-mode))
+  )
 
 (defun setup-tide-mode ()
   (interactive)
@@ -876,6 +874,8 @@ _j_ jump (imenu)                  _ic_ → indium chrome
 (add-hook 'typescript-mode-hook #'smartparens-mode)
 (add-hook 'typescript-mode-hook #'evil-smartparens-mode)
 (sp-local-pair 'typescript-mode "{" nil :post-handlers '((my-create-newline-and-enter-sexp "RET")))
+(add-hook 'typescript-mode-hook #'setup-tide-mode)
+;; (add-hook 'rjsx-mode-hook #'setup-tide-mode)
 (add-hook 'typescript-mode-hook 'add-node-modules-path)
 
 (defhydra hydra-typescript (:color red
@@ -953,9 +953,9 @@ _i_ → organize imports
 (add-to-list 'auto-mode-alist '("\\.html\\.twig\\'" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
 
-(add-hook 'web-mode-hook (lambda ()
-                           (set (make-local-variable 'company-backends) '(company-web-html))
-                           (company-mode t)))
+;; (add-hook 'web-mode-hook (lambda ()
+;;                            (set (make-local-variable 'company-backends) '(company-web-html))
+;;                            (company-mode t)))
 (add-hook 'web-mode-hook #'smartparens-mode)
 (add-hook 'web-mode-hook #'evil-smartparens-mode)
 
@@ -1321,6 +1321,11 @@ Links, footnotes  C-c C-a    _L_: link          _U_: uri        _F_: footnote   
 (setq org-outline-path-complete-in-steps nil)         ; Refile in a single go
 (setq org-refile-use-outline-path 'file)
 
+(use-package org-jira
+  :defer t
+  :config
+  (setq jiralib-url "https://jira.rsna.org/"))
+
 ;; Hydra for org agenda (graciously taken from Spacemacs)
 (defhydra hydra-org-agenda (:pre (setq which-key-inhibit t)
                                  :post (setq which-key-inhibit nil)
@@ -1684,7 +1689,7 @@ Consider only documented, non-obsolete functions."
  '(linum-format " %5i ")
  '(package-selected-packages
    (quote
-    (web-mode ivy-hydra auto-org-md org-id company-box skewer-mode skewer markdown-mode hydra org-bullets slime magit nord-theme eyebrowse evil-collection solarized-theme evil-magit ac-php company-php php-mode evil-cleverparens evil-smartparens smartparens tide indium js2-mode smart-mode-line sublime-themes counsel general evil)))
+    (org-jira web-mode ivy-hydra auto-org-md org-id company-box skewer-mode skewer markdown-mode hydra org-bullets slime magit nord-theme eyebrowse evil-collection solarized-theme evil-magit ac-php company-php php-mode evil-cleverparens evil-smartparens smartparens tide indium js2-mode smart-mode-line sublime-themes counsel general evil)))
  '(sp-highlight-pair-overlay nil))
 
 (custom-set-faces
