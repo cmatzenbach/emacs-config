@@ -659,21 +659,21 @@ _SPC_ cancel	_o_nly this   	_d_elete
 ;; ======== PROJECTILE ========
 (use-package projectile)
 (use-package counsel-projectile
-             :config
-             
-(counsel-projectile-mode)
-(setq projectile-enable-caching t)
-;; overwrite default projectile functions with counsel-projectile alternatives
-(define-key projectile-mode-map (kbd "C-c p b") 'counsel-projectile-switch-to-buffer)
-(define-key projectile-mode-map (kbd "C-c p b") 'counsel-projectile-switch-to-buffer)
-(define-key projectile-mode-map (kbd "C-c p d") 'counsel-projectile-find-dir)
-;; currently overwriting projectile-find-file-in-directory (seems pointless)
-(define-key projectile-mode-map (kbd "C-c p l") 'counsel-projectile)
-(define-key projectile-mode-map (kbd "C-c p f") 'counsel-projectile-find-file)
-(define-key projectile-mode-map (kbd "C-c p p") 'counsel-projectile-switch-project)
-(define-key projectile-mode-map (kbd "C-c p s g") 'counsel-projectile-grep)
-(define-key projectile-mode-map (kbd "C-c p s s") 'counsel-projectile-ag)
-)
+  :config
+  
+  (counsel-projectile-mode)
+  (setq projectile-enable-caching t)
+  ;; overwrite default projectile functions with counsel-projectile alternatives
+  (define-key projectile-mode-map (kbd "C-c p b") 'counsel-projectile-switch-to-buffer)
+  (define-key projectile-mode-map (kbd "C-c p b") 'counsel-projectile-switch-to-buffer)
+  (define-key projectile-mode-map (kbd "C-c p d") 'counsel-projectile-find-dir)
+  ;; currently overwriting projectile-find-file-in-directory (seems pointless)
+  (define-key projectile-mode-map (kbd "C-c p l") 'counsel-projectile)
+  (define-key projectile-mode-map (kbd "C-c p f") 'counsel-projectile-find-file)
+  (define-key projectile-mode-map (kbd "C-c p p") 'counsel-projectile-switch-project)
+  (define-key projectile-mode-map (kbd "C-c p s g") 'counsel-projectile-grep)
+  (define-key projectile-mode-map (kbd "C-c p s s") 'counsel-projectile-ag)
+  )
 
 ;; ======== C-MODE ========
 (add-hook 'c-mode-hook #'smartparens-mode)
@@ -713,7 +713,8 @@ _f_ flycheck
   )
 
 ;; ======== JAVASCRIPT ========
-(use-package js2-mode)
+(use-package js2-mode
+  :defer t)
 (add-to-list 'auto-mode-alist '("\\.js\\'\\|\\.json\\'" . js2-mode)) 
 ;; better imenu
 (add-hook 'js2-mode-hook #'js2-imenu-extras-mode) 
@@ -722,8 +723,8 @@ _f_ flycheck
 (use-package js2-refactor
   :defer t
   :config 
-(js2r-add-keybindings-with-prefix "C-c C-m")
-)
+  (js2r-add-keybindings-with-prefix "C-c C-m")
+  )
 
 (use-package xref-js2)
 (define-key js2-mode-map (kbd "C-k") #'js2r-kill)
@@ -912,8 +913,10 @@ _i_ → organize imports
 
 
 ;; ======== PHP ========
-(use-package php-mode)
-(use-package company-php)
+(use-package php-mode
+  :defer t)
+(use-package company-php
+  :after php-mode)
 (add-to-list 'auto-mode-alist '("\\.php\\'" . php-mode))
 (add-hook 'php-mode-hook
           '(lambda ()
