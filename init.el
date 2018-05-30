@@ -73,11 +73,20 @@
 (load-user-file "appearance.el")
 ;; load manually installed local packages
 (add-to-list 'load-path "~/.emacs.d/local-packages/")
-(add-to-list 'load-path "~/.emacs.d/config/")
+;; (add-to-list 'load-path "~/.emacs.d/config/")
 (load "let-alist-1.0.5.el")
 (load "highlight-escape-sequences.el")
 (load "highlight-quoted.el")
 ;; (load "evil-evilified-state.el")
+
+;; additional syntax highlighting
+;; highlights elisp symbols
+(use-package highlight-defined)
+;; highlights numbers
+(use-package highlight-numbers)
+;; activate highlight-escape-sequences mode (locally installed package)
+(hes-mode)
+(add-hook 'prog-mode-hook 'highlight-numbers-mode)
 
 
 ;; ======== COUNSEL/IVY/SWIPER ========
@@ -191,8 +200,8 @@
 (sublimity-mode 1)
 
 ;; ======== PERSPECTIVE ========
-(use-package persp-mode)
-(persp-mode)
+;; (use-package persp-mode)
+;; (persp-mode)
 
 ;; ======== EYEBROWSE ========
 (use-package eyebrowse
@@ -368,7 +377,8 @@ _SPC_ cancel	_o_nly this   	_d_elete
  "jw" 'avy-goto-word-1
 
  ;; perspective
- "l" '(:keymap persp-key-map :package persp-mode :which-key "Layout")
+ ;; "l" '(:keymap persp-key-map :package persp-mode :which-key "Layout")
+ "l" '(:ignore t :which-key "Layout")
  "l0" 'eyebrowse-switch-to-window-config-0
  "l1" 'eyebrowse-switch-to-window-config-1
  "l2" 'eyebrowse-switch-to-window-config-2
@@ -410,24 +420,6 @@ _SPC_ cancel	_o_nly this   	_d_elete
  "w/" 'evil-window-vsplit
  "w-" 'evil-window-split
  )
-
-;; (general-define-key
-;;  :states '(normal emacs-lisp-mode-map)
-;;  :major-modes '(emacs-lisp-mode t)
-;;  :prefix "SPC m"
-
-;;  "e" '(:ignore t :which-key "Eval")
-;;  "eb" 'eval-buffer
-;;  "er" 'eval-region)
-
-;; (general-define-key
-;;  :keymaps 'js2-mode-map
-;;  :states 'normal
-;;  :prefix "SPC m"
-
-;;  "e" '(:ignore t :which-key "Errors")
-;;  "en" 'js2-error-buffer-next
-;;  "ep" 'js2-error-buffer-prev)
 
 
 ;; ======== HYDRA ========
@@ -491,15 +483,6 @@ _SPC_ cancel	_o_nly this   	_d_elete
 ;;         (24 . fa_square_o) ;; Operator
 ;;         (25 . fa_arrows)) ;; TypeParameter
 ;;       )
-
-;; Company Tern
-(use-package company-tern)
-(add-to-list 'company-backends 'company-tern)
-(add-hook 'js2-mode-hook (lambda ()
-                           (tern-mode)
-                           (company-mode)))
-(define-key tern-mode-keymap (kbd "M-.") nil)
-(define-key tern-mode-keymap (kbd "M-,") nil)
 
 ;; Company Quickhelp
 ;; adds documentation pop-ups to company-mode
@@ -714,79 +697,98 @@ _f_ flycheck
 
 ;; ======== JAVASCRIPT ========
 (use-package js2-mode
-  :defer t)
-(add-to-list 'auto-mode-alist '("\\.js\\'\\|\\.json\\'" . js2-mode)) 
-;; better imenu
-(add-hook 'js2-mode-hook #'js2-imenu-extras-mode) 
-(setq js2-highlight-level 3)
+  :defer t
+  :init
+  (add-to-list 'auto-mode-alist '("\\.js\\'\\|\\.json\\'" . js2-mode)) 
+  (setq js2-include-node-externs t)
+  (setq js2-include-browser-externs t)
+  (setq js2-highlight-level 3)
+  :config
+  ;; better imenu
+  (js2-imenu-extras-mode)
+  ;; tern autocompletion
+  (use-package company-tern)
+  (add-to-list 'company-backends 'company-tern)
+  (add-hook 'js2-mode-hook (lambda ()
+                             (tern-mode)
+                             (company-mode)
+                             (smartparens-mode)
+                             (evil-smartparens-mode)
+                             (flycheck-mode)))
+  (define-key tern-mode-keymap (kbd "M-.") nil)
+  (define-key tern-mode-keymap (kbd "M-,") nil)
+  ;; js-mode (which js2 is based on) binds "M-." which conflicts with xref, so
+  ;; unbind it.
+  (define-key js-mode-map (kbd "M-.") nil)
+  )
 
 (use-package js2-refactor
-  :defer t
+  :hook (js2-mode . js2-refactor-mode)
   :config 
   (js2r-add-keybindings-with-prefix "C-c C-m"))
 
-(use-package xref-js2)
-(define-key js2-mode-map (kbd "C-k") #'js2r-kill)
+(use-package xref-js2
+  :defer t
+  :config
+  (define-key js2-mode-map (kbd "C-k") #'js2r-kill)
+  )
 
 ;; add-node-modules-path retrives binaries from node_modules for things like eslint
 (use-package add-node-modules-path
-  :after js2-mode)
+  :hook (js2-mode . add-node-modules-path))
 
-;; js-mode (which js2 is based on) binds "M-." which conflicts with xref, so
-;; unbind it.
-(define-key js-mode-map (kbd "M-.") nil)
 
 ;; setup mode hooks
-(add-hook 'js2-mode-hook #'smartparens-mode)
-(add-hook 'js2-mode-hook #'evil-smartparens-mode)
+;; (add-hook 'js2-mode-hook #'smartparens-mode)
+;; (add-hook 'js2-mode-hook #'evil-smartparens-mode)
 (sp-local-pair 'js2-mode "{" nil :post-handlers '((my-create-newline-and-enter-sexp "RET")))
-(add-hook 'js2-mode-hook 'flycheck-mode)
-(add-hook 'js2-mode-hook #'js2-refactor-mode)
+;; (add-hook 'js2-mode-hook 'flycheck-mode)
+;; (add-hook 'js2-mode-hook #'js2-refactor-mode)
 (add-hook 'js2-mode-hook (lambda ()
                            (add-hook 'xref-backend-functions #'xref-js2-xref-backend nil t)))
-(add-hook 'js2-mode-hook 'add-node-modules-path)
+;; (add-hook 'js2-mode-hook 'add-node-modules-path)
 
 ;; indium
 (use-package indium
   :defer t)
 
 ;; skewer
-(use-package skewer-mode
-  :defer t)
+;; (use-package skewer-mode
+;;   :defer t)
 
 ;; spacemacs skewer functions
 
-(defun spacemacs/skewer-start-repl ()
-  "Attach a browser to Emacs and start a skewer REPL."
-  (interactive)
-  (run-skewer)
-  (skewer-repl))
+;; (defun spacemacs/skewer-start-repl ()
+;;   "Attach a browser to Emacs and start a skewer REPL."
+;;   (interactive)
+;;   (run-skewer)
+;;   (skewer-repl))
 
-(defun spacemacs/skewer-load-buffer-and-focus ()
-  "Execute whole buffer in browser and switch to REPL in insert state."
-  (interactive)
-  (skewer-load-buffer)
-  (skewer-repl)
-  (evil-insert-state))
+;; (defun spacemacs/skewer-load-buffer-and-focus ()
+;;   "Execute whole buffer in browser and switch to REPL in insert state."
+;;   (interactive)
+;;   (skewer-load-buffer)
+;;   (skewer-repl)
+;;   (evil-insert-state))
 
-(defun spacemacs/skewer-eval-defun-and-focus ()
-  "Execute function at point in browser and switch to REPL in insert state."
-  (interactive)
-  (skewer-eval-defun)
-  (skewer-repl)
-  (evil-insert-state))
+;; (defun spacemacs/skewer-eval-defun-and-focus ()
+;;   "Execute function at point in browser and switch to REPL in insert state."
+;;   (interactive)
+;;   (skewer-eval-defun)
+;;   (skewer-repl)
+;;   (evil-insert-state))
 
-(defun spacemacs/skewer-eval-region (beg end)
-  "Execute the region as JavaScript code in the attached browser."
-  (interactive "r")
-  (skewer-eval (buffer-substring beg end) #'skewer-post-minibuffer))
+;; (defun spacemacs/skewer-eval-region (beg end)
+;;   "Execute the region as JavaScript code in the attached browser."
+;;   (interactive "r")
+;;   (skewer-eval (buffer-substring beg end) #'skewer-post-minibuffer))
 
-(defun spacemacs/skewer-eval-region-and-focus (beg end)
-  "Execute the region in browser and swith to REPL in insert state."
-  (interactive "r")
-  (spacemacs/skewer-eval-region beg end)
-  (skewer-repl)
-  (evil-insert-state))
+;; (defun spacemacs/skewer-eval-region-and-focus (beg end)
+;;   "Execute the region in browser and swith to REPL in insert state."
+;;   (interactive "r")
+;;   (spacemacs/skewer-eval-region beg end)
+;;   (skewer-repl)
+;;   (evil-insert-state))
 
 ;; js2-refactor hydra
 (defhydra js2-refactor-hydra (:color blue :hint nil)
@@ -801,34 +803,34 @@ _f_ flycheck
 [_tf_] Toggle fun exp and decl [_ag_] Add var to globals
 [_ta_] Toggle fun expr and =>  [_ti_] Ternary to if
 [_z_] return                   [_q_]  quit"
-    ("ee" js2r-expand-node-at-point)
-("cc" js2r-contract-node-at-point)
-("ef" js2r-extract-function)
-("em" js2r-extract-method)
-("tf" js2r-toggle-function-expression-and-declaration)
-("ta" js2r-toggle-arrow-function-and-expression)
-("ip" js2r-introduce-parameter)
-("lp" js2r-localize-parameter)
-("wi" js2r-wrap-buffer-in-iife)
-("ig" js2r-inject-global-in-iife)
-("ag" js2r-add-to-globals-annotation)
-("ev" js2r-extract-var)
-("iv" js2r-inline-var)
-("rv" js2r-rename-var)
-("vt" js2r-var-to-this)
-("ao" js2r-arguments-to-object)
-("ti" js2r-ternary-to-if)
-("sv" js2r-split-var-declaration)
-("ss" js2r-split-string)
-("uw" js2r-unwrap)
-("lt" js2r-log-this)
-("dt" js2r-debug-this)
-("sl" js2r-forward-slurp)
-("ba" js2r-forward-barf)
-("k" js2r-kill)
-("q" nil)
-("z" hydra-javascript/body)
-)
+  ("ee" js2r-expand-node-at-point)
+  ("cc" js2r-contract-node-at-point)
+  ("ef" js2r-extract-function)
+  ("em" js2r-extract-method)
+  ("tf" js2r-toggle-function-expression-and-declaration)
+  ("ta" js2r-toggle-arrow-function-and-expression)
+  ("ip" js2r-introduce-parameter)
+  ("lp" js2r-localize-parameter)
+  ("wi" js2r-wrap-buffer-in-iife)
+  ("ig" js2r-inject-global-in-iife)
+  ("ag" js2r-add-to-globals-annotation)
+  ("ev" js2r-extract-var)
+  ("iv" js2r-inline-var)
+  ("rv" js2r-rename-var)
+  ("vt" js2r-var-to-this)
+  ("ao" js2r-arguments-to-object)
+  ("ti" js2r-ternary-to-if)
+  ("sv" js2r-split-var-declaration)
+  ("ss" js2r-split-string)
+  ("uw" js2r-unwrap)
+  ("lt" js2r-log-this)
+  ("dt" js2r-debug-this)
+  ("sl" js2r-forward-slurp)
+  ("ba" js2r-forward-barf)
+  ("k" js2r-kill)
+  ("q" nil)
+  ("z" hydra-javascript/body)
+  )
 
 (defhydra hydra-javascript (:color red
                                    :hint nil)
@@ -891,13 +893,13 @@ _i_ → organize imports
 
 
 ;; ======== REACT/JSX ========
-(use-package rjsx-mode
-  ;; currently have a hook in tide which uses tide for rjsx checking and completion - need jsconfig.json in root of project
-  :defer t
-  :init
-  (add-to-list 'auto-mode-alist '("components\/.*\.js\'" . rjsx-mode))
-  (add-to-list 'auto-mode-alist '("containers\/.*\.js\'" . rjsx-mode))
-  )
+;; (use-package rjsx-mode
+;;   ;; currently have a hook in tide which uses tide for rjsx checking and completion - need jsconfig.json in root of project
+;;   :defer t
+;;   :init
+;;   (add-to-list 'auto-mode-alist '("components\/.*\.js\'" . rjsx-mode))
+;;   (add-to-list 'auto-mode-alist '("containers\/.*\.js\'" . rjsx-mode))
+;;   )
 
 ;; add completion details
 ;; (setq tide-completion-detailed t)
@@ -1171,11 +1173,6 @@ _f_ flycheck
 (add-hook 'racket-mode-hook #'highlight-quoted-mode)
 
 
-;; ======== COMMON LISP ========
-(load (expand-file-name "~/quicklisp/slime-helper.el"))
-(setq inferior-lisp-program "/usr/bin/sbcl")
-
-
 ;; ======== MAGIT ========
 (use-package evil-magit)
 
@@ -1438,27 +1435,6 @@ _vr_ reset      ^^                       ^^                 ^^
   ("'" kmacro-edit-macro)
   ("," edit-kbd-macro)
   ("q" nil :color blue))
-
-;; ======== THEMES/COLOR MODS ========
-;; theme packages
-                                        ;(use-package kaolin-themes)
-                                        ;(use-package afternoon-theme)
-                                        ;(use-package gruvbox-theme)
-                                        ;(use-package nord-theme)
-                                        ;(use-package oceanic-theme)
-                                        ;(use-package liso-theme)
-                                        ;(use-package challenger-deep-theme)
-                                        ;(use-package creamsody-theme)
-                                        ;(use-package material-theme)
-
-;; additional syntax highlighting
-;; highlights elisp symbols
-(use-package highlight-defined)
-;; highlights numbers
-(use-package highlight-numbers)
-;; activate highlight-escape-sequences mode (locally installed package)
-(hes-mode)
-(add-hook 'prog-mode-hook 'highlight-numbers-mode)
 
 
 ;; ======== HELPER FUNCTIONS ======== 
