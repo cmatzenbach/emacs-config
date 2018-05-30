@@ -699,7 +699,7 @@ _f_ flycheck
 (use-package js2-mode
   :defer t
   :init
-  (add-to-list 'auto-mode-alist '("\\.js\\'\\|\\.json\\'" . js2-mode)) 
+  (add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode)) 
   (setq js2-include-node-externs t)
   (setq js2-include-browser-externs t)
   (setq js2-highlight-level 3)
@@ -910,6 +910,13 @@ _i_ → organize imports
 ;; (add-hook 'rjxs-mode-hook #'evil-smartparens-mode)
 ;; (sp-local-pair 'rjsx-mode "{" nil :post-handlers '((my-create-newline-and-enter-sexp "RET")))
 ;; (add-hook 'rjsx-mode-hook 'add-node-modules-path)
+
+
+;; ======== JSON ========
+(use-package json-mode
+  :mode (("\\.json\\'" . json-mode)
+	   ("\\manifest.webapp\\'" . json-mode )
+	   ("\\.tern-project\\'" . json-mode)))
 
 
 ;; ======== PHP ========
