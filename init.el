@@ -73,9 +73,11 @@
 (load-user-file "appearance.el")
 ;; load manually installed local packages
 (add-to-list 'load-path "~/.emacs.d/local-packages/")
+(add-to-list 'load-path "~/.emacs.d/config/")
 (load "let-alist-1.0.5.el")
 (load "highlight-escape-sequences.el")
 (load "highlight-quoted.el")
+(load "evil-evilified-state.el")
 
 
 ;; ======== COUNSEL/IVY/SWIPER ========
@@ -97,6 +99,9 @@
         ("C-j" . ivy-next-line)
         ("C-l" . ivy-alt-done)))
 
+(use-package ivy-hydra
+  :after ivy-mode)
+
 
 ;; ======== EVIL MODE ========
 (use-package evil
@@ -114,7 +119,7 @@
   (evil-collection-init))
 
 ;; load evil-evilified-state (from author of spacemacs)
-(load-user-file "evil-evilified-state.el")
+;; (load-user-file "evil-evilified-state.el")
 (require 'evil-evilified-state)
 
 ;; ;; use esc to exit minibuffer
@@ -308,6 +313,7 @@ _SPC_ cancel	_o_nly this   	_d_elete
  "aoc" 'org-capture
  "aol" 'org-store-link
  "ar" 'start-restclient
+ "au" 'counsel-unicode-char
 
  ;; buffers
  "b" '(:ignore t :which-key "Buffers")
@@ -347,9 +353,8 @@ _SPC_ cancel	_o_nly this   	_d_elete
  "hp" 'helpful-at-point
  "hv" 'helpful-variable
 
- ;; insert
- "i" '(:ignore t :which-key "Insert")
- "iu" 'counsel-unicode-char
+ ;; ivy/counsel
+ "i" '(hydra-ivy/body :which-key "Ivy")
 
  ;; jump
  "j" '(:ignore t :which-key "Jump")
@@ -392,6 +397,7 @@ _SPC_ cancel	_o_nly this   	_d_elete
  
  ;; search
  "s" '(:ignore t :which-key "Search")
+ "sa" 'counsel-ag
  "sg" 'counsel-git-grep
 
  ;; windows
@@ -838,9 +844,17 @@ _j_ jump (imenu)                  _ic_ → indium chrome
   ("r" js2-refactor-hydra/body :exit t)
   )
 
+
 ;; ======== TYPESCRIPT ========
+;; (use-package tide
+;;   :defer t)
 (use-package tide
-  :defer t)
+  :defer t
+  :config
+  (progn
+    (add-hook 'typescript-mode-hook #'setup-tide-mode)
+    (add-hook 'rjsx-mode-hook #'setup-tide-mode)))
+
 (defun setup-tide-mode ()
   (interactive)
   (tide-setup)
@@ -862,8 +876,6 @@ _j_ jump (imenu)                  _ic_ → indium chrome
 (add-hook 'typescript-mode-hook #'smartparens-mode)
 (add-hook 'typescript-mode-hook #'evil-smartparens-mode)
 (sp-local-pair 'typescript-mode "{" nil :post-handlers '((my-create-newline-and-enter-sexp "RET")))
-;; run required configuration function for tide
-(add-hook 'typescript-mode-hook #'setup-tide-mode)
 (add-hook 'typescript-mode-hook 'add-node-modules-path)
 
 (defhydra hydra-typescript (:color red
@@ -881,6 +893,28 @@ _i_ → organize imports
   ("j" tide-jsdoc-template)
   ("i" tide-organize-imports) 
   )
+
+
+;; ======== REACT/JSX ========
+(use-package rjsx-mode
+  ;; currently have a hook in tide which uses tide for rjsx checking and completion - need jsconfig.json in root of project
+  ;; :defer t
+  :init
+  (add-to-list 'auto-mode-alist '("components\/.*\.js\'" . rjsx-mode))
+  (add-to-list 'auto-mode-alist '("containers\/.*\.js\'" . rjsx-mode))
+  )
+
+;; add completion details
+;; (setq tide-completion-detailed t)
+;; aligns annotation to the right hand side
+;; (setq company-tooltip-align-annotations t)
+
+;; configure smartparens
+;; (add-hook 'rjsx-mode-hook #'smartparens-mode)
+;; (add-hook 'rjxs-mode-hook #'evil-smartparens-mode)
+;; (sp-local-pair 'rjsx-mode "{" nil :post-handlers '((my-create-newline-and-enter-sexp "RET")))
+;; (add-hook 'rjsx-mode-hook 'add-node-modules-path)
+
 
 ;; ======== PHP ========
 (use-package php-mode
@@ -1065,63 +1099,63 @@ _f_ flycheck
 ;;   )
 
 
-  ;; TODO: Add Debug Hydra
-  (defhydra hydra-slime-compile (:color blue :columns 3)
-    "Compile"
-    ("c" slime-compile-file "Compile")
-    ("C" slime-compile-and-load-file "Compile and Load")
-    ("l" slime-load-file "Load File")
-    ("f" slime-compile-defun "Compile Defun")
-    ("r" slime-compile-region "Compile Region")
-    ("n" slime-remove-notes "Remove Notes"))
+;; TODO: Add Debug Hydra
+(defhydra hydra-slime-compile (:color blue :columns 3)
+  "Compile"
+  ("c" slime-compile-file "Compile")
+  ("C" slime-compile-and-load-file "Compile and Load")
+  ("l" slime-load-file "Load File")
+  ("f" slime-compile-defun "Compile Defun")
+  ("r" slime-compile-region "Compile Region")
+  ("n" slime-remove-notes "Remove Notes"))
 
-  (defhydra hydra-slime-eval (:color blue :columns 3)
-    "Eval"
-    ("b" slime-eval-buffer "Buffer")
-    ("f" slime-eval-defun "Defun")
-    ("F" slime-undefine-function "Undefine Function")
-    ("e" slime-eval-last-expression "Last Sexp")
-    ("r" slime-eval-region "Region"))
+(defhydra hydra-slime-eval (:color blue :columns 3)
+  "Eval"
+  ("b" slime-eval-buffer "Buffer")
+  ("f" slime-eval-defun "Defun")
+  ("F" slime-undefine-function "Undefine Function")
+  ("e" slime-eval-last-expression "Last Sexp")
+  ("r" slime-eval-region "Region"))
 
-  (defhydra hydra-slime-help (:color blue :columns 3)
-    "Help"
-    ("a" slime-apropos "Apropros")
-    ("A" slime-apropos-all "Apropros All")
-    ("d" slime-disassemble-symbol "Disassemble")
-    ("h" slime-describe-symbol "Describe Symbol")
-    ("H" slime-hyperspec-lookup "Hyperspec Lookup")
-    ("p" slime-apropos-package "Apropos Package")
-    ("t" slime-toggle-trace-fdefinition "Toggle Trace Fdefinition")
-    ("T" slime-untrace-all "Untrace All")
-    ("<" slime-who-calls "Who Calls")
-    (">" slime-calls-who "Calls Who")
-    ;; TODO: Add key bindings for who binds/sets globals?
-    ("r" slime-who-references "Who References")
-    ("m" slime-who-macroexpands "Who Macroexpands")
-    ("s" slime-who-specializes "Who Specializes"))
+(defhydra hydra-slime-help (:color blue :columns 3)
+  "Help"
+  ("a" slime-apropos "Apropros")
+  ("A" slime-apropos-all "Apropros All")
+  ("d" slime-disassemble-symbol "Disassemble")
+  ("h" slime-describe-symbol "Describe Symbol")
+  ("H" slime-hyperspec-lookup "Hyperspec Lookup")
+  ("p" slime-apropos-package "Apropos Package")
+  ("t" slime-toggle-trace-fdefinition "Toggle Trace Fdefinition")
+  ("T" slime-untrace-all "Untrace All")
+  ("<" slime-who-calls "Who Calls")
+  (">" slime-calls-who "Calls Who")
+  ;; TODO: Add key bindings for who binds/sets globals?
+  ("r" slime-who-references "Who References")
+  ("m" slime-who-macroexpands "Who Macroexpands")
+  ("s" slime-who-specializes "Who Specializes"))
 
-  (defhydra hydra-slime-navigate (:color blue :columns 3)
-    "Navigate"
-    ("g" slime-edit-definition "Find Definition")
-    ("b" slime-pop-find-definition-stack "Find Definition Pop")
-    ("n" slime-next-note "Next Note")
-    ("p" slime-previous-note "Previous Note")
-    ("r" slime-who-references "Who References")
-    ("m" slime-who-macroexpands "Who Macroexpands")
-    ("s" slime-who-specializes "Who Specializes"))
+(defhydra hydra-slime-navigate (:color blue :columns 3)
+  "Navigate"
+  ("g" slime-edit-definition "Find Definition")
+  ("b" slime-pop-find-definition-stack "Find Definition Pop")
+  ("n" slime-next-note "Next Note")
+  ("p" slime-previous-note "Previous Note")
+  ("r" slime-who-references "Who References")
+  ("m" slime-who-macroexpands "Who Macroexpands")
+  ("s" slime-who-specializes "Who Specializes"))
 
-  (defhydra hydra-slime-mode (:color blue :columns 3)
-    "Slime"
-    ("e" hydra-slime-eval/body "Eval")
-    ("h" hydra-slime-help/body "Help")
-    ("g" hydra-slime-navigate/body "Navigate")
-    ("x" slime-scratch "Scratch")
-    ("ma" slime-macroexpand-all "Macroexpand All")
-    ("mo" slime-macroexpand-1 "Macroexpand One")
-    ("se" slime-eval-last-expression-in-repl "Eval Last Expression in Repl")
-    ("si" slime "Slime")
-    ("sq" slime-quit-lisp "Quit Lisp")
-("tf" slime-toggle-fancy-trace "Toggle Fancy Trace"))
+(defhydra hydra-slime-mode (:color blue :columns 3)
+  "Slime"
+  ("e" hydra-slime-eval/body "Eval")
+  ("h" hydra-slime-help/body "Help")
+  ("g" hydra-slime-navigate/body "Navigate")
+  ("x" slime-scratch "Scratch")
+  ("ma" slime-macroexpand-all "Macroexpand All")
+  ("mo" slime-macroexpand-1 "Macroexpand One")
+  ("se" slime-eval-last-expression-in-repl "Eval Last Expression in Repl")
+  ("si" slime "Slime")
+  ("sq" slime-quit-lisp "Quit Lisp")
+  ("tf" slime-toggle-fancy-trace "Toggle Fancy Trace"))
 
 
 ;; ======== RACKET ========
@@ -1503,6 +1537,8 @@ _vr_ reset      ^^                       ^^                 ^^
      (hydra-javascript/body))
     (typescript-mode
      (hydra-typescript/body))
+    (rjsx-mode
+     (hydra-typescript/body))
     (markdown-mode
      (hydra-markdown/body))
     (org-agenda-mode
@@ -1648,7 +1684,7 @@ Consider only documented, non-obsolete functions."
  '(linum-format " %5i ")
  '(package-selected-packages
    (quote
-    (auto-org-md org-id company-box skewer-mode skewer markdown-mode hydra org-bullets slime magit nord-theme eyebrowse evil-collection solarized-theme evil-magit ac-php company-php php-mode evil-cleverparens evil-smartparens smartparens tide indium js2-mode smart-mode-line sublime-themes counsel general evil)))
+    (web-mode ivy-hydra auto-org-md org-id company-box skewer-mode skewer markdown-mode hydra org-bullets slime magit nord-theme eyebrowse evil-collection solarized-theme evil-magit ac-php company-php php-mode evil-cleverparens evil-smartparens smartparens tide indium js2-mode smart-mode-line sublime-themes counsel general evil)))
  '(sp-highlight-pair-overlay nil))
 
 (custom-set-faces
