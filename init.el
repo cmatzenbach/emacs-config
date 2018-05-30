@@ -154,7 +154,7 @@
     (evil-delete (point-at-bol) (point))))
 
 ;; map fd to escape normal mode
-(require 'key-chord) 
+(use-package key-chord) 
 (key-chord-mode 1) 
 (key-chord-define-global "fd" 'evil-normal-state) 
 
@@ -527,7 +527,6 @@ _SPC_ cancel	_o_nly this   	_d_elete
   :defer t
   :init (global-flycheck-mode))
 
-(add-hook 'flycheck-mode-hook 'counsel-gtags-mode)
 
 (defun lunaryorn-use-js-executables-from-node-modules ()
   "Set executables of JS checkers from local node modules."
@@ -568,6 +567,7 @@ _SPC_ cancel	_o_nly this   	_d_elete
 (use-package counsel-gtags)
 (add-hook 'c-mode-hook 'counsel-gtags-mode)
 (add-hook 'c++-mode-hook 'counsel-gtags-mode)
+(add-hook 'flycheck-mode-hook 'counsel-gtags-mode)
 
 (with-eval-after-load 'counsel-gtags
   (define-key counsel-gtags-mode-map (kbd "M-t") 'counsel-gtags-find-definition)
@@ -658,7 +658,9 @@ _SPC_ cancel	_o_nly this   	_d_elete
 
 ;; ======== PROJECTILE ========
 (use-package projectile)
-(use-package counsel-projectile)
+(use-package counsel-projectile
+             :config
+             
 (counsel-projectile-mode)
 (setq projectile-enable-caching t)
 ;; overwrite default projectile functions with counsel-projectile alternatives
@@ -671,7 +673,7 @@ _SPC_ cancel	_o_nly this   	_d_elete
 (define-key projectile-mode-map (kbd "C-c p p") 'counsel-projectile-switch-project)
 (define-key projectile-mode-map (kbd "C-c p s g") 'counsel-projectile-grep)
 (define-key projectile-mode-map (kbd "C-c p s s") 'counsel-projectile-ag)
-
+)
 
 ;; ======== C-MODE ========
 (add-hook 'c-mode-hook #'smartparens-mode)
@@ -711,16 +713,17 @@ _f_ flycheck
   )
 
 ;; ======== JAVASCRIPT ========
-(use-package js2-mode
-  :defer t)
+(use-package js2-mode)
 (add-to-list 'auto-mode-alist '("\\.js\\'\\|\\.json\\'" . js2-mode)) 
 ;; better imenu
 (add-hook 'js2-mode-hook #'js2-imenu-extras-mode) 
 (setq js2-highlight-level 3)
 
 (use-package js2-refactor
-  :defer t)
+  :defer t
+  :config 
 (js2r-add-keybindings-with-prefix "C-c C-m")
+)
 
 (use-package xref-js2)
 (define-key js2-mode-map (kbd "C-k") #'js2r-kill)
@@ -861,9 +864,8 @@ _f_ flycheck
   (setq tide-completion-detailed t)
   (add-hook 'before-save-hook 'tide-format-before-save)
   (add-hook 'typescript-mode-hook #'setup-tide-mode)
-
-(add-to-list 'company-backends 'company-tide)
-  )
+  (add-hook 'rjsx-mode-hook #'setup-tide-mode)
+  (add-to-list 'company-backends 'company-tide))
 
 ;; configure smartparens
 (add-hook 'typescript-mode-hook #'smartparens-mode)
@@ -891,7 +893,7 @@ _i_ → organize imports
 ;; ======== REACT/JSX ========
 (use-package rjsx-mode
   ;; currently have a hook in tide which uses tide for rjsx checking and completion - need jsconfig.json in root of project
-  ;; :defer t
+  :defer t
   :init
   (add-to-list 'auto-mode-alist '("components\/.*\.js\'" . rjsx-mode))
   (add-to-list 'auto-mode-alist '("containers\/.*\.js\'" . rjsx-mode))
@@ -910,8 +912,7 @@ _i_ → organize imports
 
 
 ;; ======== PHP ========
-(use-package php-mode
-  :defer t)
+(use-package php-mode)
 (use-package company-php)
 (add-to-list 'auto-mode-alist '("\\.php\\'" . php-mode))
 (add-hook 'php-mode-hook
