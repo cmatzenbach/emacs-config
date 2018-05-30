@@ -656,11 +656,11 @@ _SPC_ cancel	_o_nly this   	_d_elete
                       (powerline-render rhs))))))
   )
 
+
 ;; ======== PROJECTILE ========
 (use-package projectile)
 (use-package counsel-projectile
   :config
-  
   (counsel-projectile-mode)
   (setq projectile-enable-caching t)
   ;; overwrite default projectile functions with counsel-projectile alternatives
@@ -672,8 +672,8 @@ _SPC_ cancel	_o_nly this   	_d_elete
   (define-key projectile-mode-map (kbd "C-c p f") 'counsel-projectile-find-file)
   (define-key projectile-mode-map (kbd "C-c p p") 'counsel-projectile-switch-project)
   (define-key projectile-mode-map (kbd "C-c p s g") 'counsel-projectile-grep)
-  (define-key projectile-mode-map (kbd "C-c p s s") 'counsel-projectile-ag)
-  )
+  (define-key projectile-mode-map (kbd "C-c p s s") 'counsel-projectile-ag))
+
 
 ;; ======== C-MODE ========
 (add-hook 'c-mode-hook #'smartparens-mode)
@@ -723,8 +723,7 @@ _f_ flycheck
 (use-package js2-refactor
   :defer t
   :config 
-  (js2r-add-keybindings-with-prefix "C-c C-m")
-  )
+  (js2r-add-keybindings-with-prefix "C-c C-m"))
 
 (use-package xref-js2)
 (define-key js2-mode-map (kbd "C-k") #'js2r-kill)
