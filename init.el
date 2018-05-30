@@ -893,13 +893,12 @@ _i_ → organize imports
 
 
 ;; ======== REACT/JSX ========
-;; (use-package rjsx-mode
-;;   ;; currently have a hook in tide which uses tide for rjsx checking and completion - need jsconfig.json in root of project
-;;   :defer t
-;;   :init
-;;   (add-to-list 'auto-mode-alist '("components\/.*\.js\'" . rjsx-mode))
-;;   (add-to-list 'auto-mode-alist '("containers\/.*\.js\'" . rjsx-mode))
-;;   )
+(use-package rjsx-mode
+  ;; currently have a hook in tide which uses tide for rjsx checking and completion - need jsconfig.json in root of project
+  :defer t
+  :init
+  (add-to-list 'auto-mode-alist '("components\\/.*\\.js\\'" . rjsx-mode))
+  (add-to-list 'auto-mode-alist '("containers\\/.*\\.js\\'" . rjsx-mode)))
 
 ;; add completion details
 ;; (setq tide-completion-detailed t)
