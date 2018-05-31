@@ -435,6 +435,11 @@ _SPC_ cancel	_o_nly this   	_d_elete
         company-minimum-prefix-length 2
         company-idle-delay 0.1))
 
+;; trigger company anytime in insert mode with C-l
+(define-key evil-insert-state-map (kbd "C-l") #'company-complete)
+;; recenter-top-bottom was originally mapped to C-l, change to C-;
+(global-set-key (kbd "C-;") 'recenter-top-bottom)
+;; use C-j and C-k to navigate through completion menu, C-l to complete
 (with-eval-after-load 'company
   (define-key company-active-map (kbd "M-n") nil)
   (define-key company-active-map (kbd "M-p") nil)
@@ -699,7 +704,7 @@ _f_ flycheck
 (use-package js2-mode
   :defer t
   :init
-  (add-to-list 'auto-mode-alist '("\\.js\\'\\|\\.json\\'" . js2-mode)) 
+  (add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode)) 
   (setq js2-include-node-externs t)
   (setq js2-include-browser-externs t)
   (setq js2-highlight-level 3)
@@ -881,17 +886,24 @@ _f_ flycheck
 (defhydra hydra-typescript (:color red
                                    :hint nil)
   "
-_d_ → doc at point      _f_ → format       _r_ → refactor
-_s_ → list references   _a_ → apply fix    _j_ → jsdoc comment
-_i_ → organize imports
+  ^Buffer^                 ^Errors^                   ^Refactor^                   ^Format^                 ^Tide^
+------------------------------------------------------------------------------------------------------------------------------------
+[_d_]   Documentation      [_e_] Errors              [_rs_]  Rename symbol         [_t_]  Tide format       [_*_]  Restart server
+[_fd_]  Find definition    [_a_] Apply error fix     [_rf_]  Refactor              [_c_]  JSDoc comment     [_v_]  Verify setup
+[_fr_]  Find references                                                                               [_i_]  Organize imports 
 "
   ("d" tide-documentation-at-point :exit t)
-  ("s" tide-references :exit t)
-  ("f" tide-format)
-  ("a" tide-fix)
-  ("r" tide-refactor)
-  ("j" tide-jsdoc-template)
-  ("i" tide-organize-imports) 
+  ("fd" tide-jump-to-definition :exit t)
+  ("fr" tide-references :exit t)
+  ("c" tide-jsdoc-template :exit t)
+  ("e" tide-project-errors :exit t)
+  ("a" tide-fix :exit t)
+  ("rs" tide-rename-symbol :exit t)
+  ("rf" tide-refactor :exit t)
+  ("t" tide-format :exit t)
+  ("*" tide-restart-server :exit t)
+  ("v" tide-verify-setup :exit t)
+  ("i" tide-organize-imports :exit t)
   )
 
 
@@ -938,6 +950,13 @@ _i_ → organize imports
   ("fd" tide-documentation-at-point :exit t)
   ("fr" tide-references :exit t)
   )
+
+;; ======== JSON ========
+(use-package json-mode
+  :mode (("\\.json\\'" . json-mode)
+	   ("\\manifest.webapp\\'" . json-mode )
+	   ("\\.tern-project\\'" . json-mode)))
+
 
 ;; ======== PHP ========
 (use-package php-mode
