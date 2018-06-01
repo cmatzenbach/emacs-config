@@ -755,7 +755,9 @@ _f_ flycheck
 
 ;; indium
 (use-package indium
-  :defer t)
+  :defer t
+  :config
+  (add-to-list 'evil-emacs-state-modes 'indium-repl-mode))
 
 ;; skewer
 ;; (use-package skewer-mode
@@ -840,21 +842,34 @@ _f_ flycheck
 (defhydra hydra-javascript (:color red
                                    :hint nil)
   "
-^REPL/Indium^             ^Errors^                  ^Buffer^                      ^Refactor^               ^Find References^
-------------------------------------------------------------------------------------------------------------------------------------
-[_'_]  Skewer REPL        [_e_] Flycheck            [_j_]  Jump (imenu)           [_r_]  Refactor         [_fw_] Show func def window
-[_in_] Indium node                                                                                        [_fj_] Jump to func def
-[_ic_] Indium chrome                                                                                      [_fr_] Find references
+  ^Buffer^                    ^Errors/Format^             ^Refactor^                   ^Indium^                 ^Tide^
+---------------------------------------------------------------------------------------------------------------------------------------
+[_d_]   Documentation         [_e_] Flycheck            [_rs_]  Rename symbol         [_in_]  Indium node       [_*_]  Restart server
+[_fd_]  Find definition       [_a_] Apply error fix     [_rf_]  Refactor              [_ic_]  Indium chrome     [_v_]  Verify setup
+[_fr_]  Find references       [_t_]  Tide format        [_rj_]  js2-refactor          [_is_]  Indium scratch    [_oi_]  Organize imports 
+[_fj_]  Jump to func def      [_c_]  JSDoc comment
+[_fw_]  Show func def window
+[_fx_]  xref find refs
 "
-  ("'" spacemacs/skewer-start-repl :exit t)
-  ("e" hydra-flycheck/body :exit t)
-  ("in" indium-run-node :exit t)
-  ("ic" indium-connect-to-chrome :exit t)
-  ("j" counsel-imenu :exit t)
-  ("r" hydra-js2-refactor/body :exit t)
-  ("fw" xref-find-definitions-other-window)
+  ("d" tide-documentation-at-point :exit t)
+  ("fd" tide-jump-to-definition :exit t)
+  ("fr" tide-references :exit t)
   ("fj" xref-find-definitions)
-  ("fr" xref-find-references)
+  ("fw" xref-find-definitions-other-window)
+  ("fx" xref-find-references)
+  ("e" hydra-flycheck/body :exit t)
+  ("a" tide-fix :exit t)
+  ("t" tide-format :exit t)
+  ("c" tide-jsdoc-template :exit t)
+  ("rs" tide-rename-symbol :exit t)
+  ("rf" tide-refactor :exit t)
+  ("rj" hydra-js2-refactor/body :exit t)
+  ("in" indium-connect-to-nodejs :exit t)
+  ("ic" indium-connect-to-chrome :exit t)
+  ("is" indium-scratch :exit t)
+  ("*" tide-restart-server :exit t)
+  ("v" tide-verify-setup :exit t)
+  ("oi" tide-organize-imports :exit t)
   )
 
 
