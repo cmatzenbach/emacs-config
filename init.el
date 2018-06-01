@@ -712,16 +712,16 @@ _f_ flycheck
   ;; better imenu
   (js2-imenu-extras-mode)
   ;; tern autocompletion
-  (use-package company-tern)
-  (add-to-list 'company-backends 'company-tern)
+  ;; (use-package company-tern)
+  ;; (add-to-list 'company-backends 'company-tern)
   (add-hook 'js2-mode-hook (lambda ()
-                             (tern-mode)
-                             (company-mode)
+                             ;; (tern-mode)
+                             ;; (company-mode)
                              (smartparens-mode)
                              (evil-smartparens-mode)
                              (flycheck-mode)))
-  (define-key tern-mode-keymap (kbd "M-.") nil)
-  (define-key tern-mode-keymap (kbd "M-,") nil)
+  ;; (define-key tern-mode-keymap (kbd "M-.") nil)
+  ;; (define-key tern-mode-keymap (kbd "M-,") nil)
   ;; js-mode (which js2 is based on) binds "M-." which conflicts with xref, so
   ;; unbind it.
   (define-key js-mode-map (kbd "M-.") nil)
@@ -872,6 +872,7 @@ _f_ flycheck
   (add-hook 'before-save-hook 'tide-format-before-save)
   (add-hook 'typescript-mode-hook #'setup-tide-mode)
   (add-hook 'rjsx-mode-hook #'setup-tide-mode)
+  (add-hook 'js2-mode-hook #'setup-tide-mode)
   (add-to-list 'company-backends 'company-tide))
 
 ;; configure smartparens
