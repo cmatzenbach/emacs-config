@@ -796,7 +796,7 @@ _f_ flycheck
 ;;   (evil-insert-state))
 
 ;; js2-refactor hydra
-(defhydra js2-refactor-hydra (:color blue :hint nil)
+(defhydra hydra-js2-refactor (:color blue :hint nil)
   "
 ^Functions^                    ^Variables^               ^Buffer^                      ^sexp^               ^Debugging^
 ------------------------------------------------------------------------------------------------------------------------------
@@ -840,18 +840,21 @@ _f_ flycheck
 (defhydra hydra-javascript (:color red
                                    :hint nil)
   "
-^REPL/Indium^             ^Errors^                  ^Buffer^                      ^Refactor^               ^Something^
-------------------------------------------------------------------------------------------------------------------------
-[_'_]  Skewer REPL        [_f_] Flycheck            [_j_]  Jump (imenu)           [_r_]  refactor        
-[_in_] Indium node
-[_ic_] Indium chrome
+^REPL/Indium^             ^Errors^                  ^Buffer^                      ^Refactor^               ^Find References^
+------------------------------------------------------------------------------------------------------------------------------------
+[_'_]  Skewer REPL        [_e_] Flycheck            [_j_]  Jump (imenu)           [_r_]  Refactor         [_fw_] Show func def window
+[_in_] Indium node                                                                                        [_fj_] Jump to func def
+[_ic_] Indium chrome                                                                                      [_fr_] Find references
 "
   ("'" spacemacs/skewer-start-repl :exit t)
-  ("f" hydra-flycheck/body :exit t)
+  ("e" hydra-flycheck/body :exit t)
   ("in" indium-run-node :exit t)
   ("ic" indium-connect-to-chrome :exit t)
   ("j" counsel-imenu :exit t)
-  ("r" js2-refactor-hydra/body :exit t)
+  ("r" hydra-js2-refactor/body :exit t)
+  ("fw" xref-find-definitions-other-window)
+  ("fj" xref-find-definitions)
+  ("fr" xref-find-references)
   )
 
 
@@ -869,7 +872,7 @@ _f_ flycheck
   :config
   (setq company-tooltip-align-annotations t)
   (setq tide-completion-detailed t)
-  (add-hook 'before-save-hook 'tide-format-before-save)
+  ;; (add-hook 'before-save-hook 'tide-format-before-save)
   (add-hook 'typescript-mode-hook #'setup-tide-mode)
   (add-hook 'rjsx-mode-hook #'setup-tide-mode)
   (add-hook 'js2-mode-hook #'setup-tide-mode)
@@ -911,7 +914,14 @@ _f_ flycheck
   :defer t
   :init
   (add-to-list 'auto-mode-alist '("components\\/.*\\.js\\'" . rjsx-mode))
-  (add-to-list 'auto-mode-alist '("containers\\/.*\\.js\\'" . rjsx-mode)))
+  (add-to-list 'auto-mode-alist '("containers\\/.*\\.js\\'" . rjsx-mode))
+  :config
+  (flycheck-add-mode 'javascript-eslint 'rjsx-mode)
+  ;; (flycheck-add-next-checker 'javascript-eslint 'jsx-tide 'append)
+  (setq js2-strict-missing-semi-warning nil)
+  (setq indent-tabs-mode t)
+  (setq flycheck-disabled-checkers 'jsx-tide)
+  )
 
 ;; add completion details
 ;; (setq tide-completion-detailed t)
@@ -924,6 +934,29 @@ _f_ flycheck
 ;; (sp-local-pair 'rjsx-mode "{" nil :post-handlers '((my-create-newline-and-enter-sexp "RET")))
 ;; (add-hook 'rjsx-mode-hook 'add-node-modules-path)
 
+(defhydra hydra-react (:color red
+                                   :hint nil)
+  "
+  ^Buffer^                 ^Errors^                   ^Refactor^                   ^Format^                 ^Tide^
+------------------------------------------------------------------------------------------------------------------------------------
+[_d_]   Documentation      [_e_] Flycheck            [_rs_]  Rename symbol         [_t_]  Tide format       [_*_]  Restart server
+[_fd_]  Find definition    [_a_] Apply error fix     [_rf_]  Refactor              [_c_]  JSDoc comment     [_v_]  Verify setup
+[_fr_]  Find references                            [_rj_]  js2-refactor                                 [_i_]  Organize imports 
+"
+  ("d" tide-documentation-at-point :exit t)
+  ("fd" tide-jump-to-definition :exit t)
+  ("fr" tide-references :exit t)
+  ("c" tide-jsdoc-template :exit t)
+  ("e" hydra-flycheck/body :exit t)
+  ("a" tide-fix :exit t)
+  ("rs" tide-rename-symbol :exit t)
+  ("rf" tide-refactor :exit t)
+  ("rj" hydra-js2-refactor/body :exit t)
+  ("t" tide-format :exit t)
+  ("*" tide-restart-server :exit t)
+  ("v" tide-verify-setup :exit t)
+  ("i" tide-organize-imports :exit t)
+  )
 
 ;; ======== JSON ========
 (use-package json-mode
@@ -1534,7 +1567,7 @@ _vr_ reset      ^^                       ^^                 ^^
     (typescript-mode
      (hydra-typescript/body))
     (rjsx-mode
-     (hydra-typescript/body))
+     (hydra-react/body))
     (markdown-mode
      (hydra-markdown/body))
     (org-agenda-mode
