@@ -26,7 +26,13 @@
 (setq-default indicate-empty-lines nil)
 ;; no more ugly line splitting
                                         ;(setq-default truncate-lines t)
-
+;; For MacOS - Add these to the PATH so that proper executables are found
+(setenv "PATH" (concat (getenv "PATH") ":/usr/texbin"))
+(setenv "PATH" (concat (getenv "PATH") ":/usr/bin"))
+(setenv "PATH" (concat (getenv "PATH") ":/usr/local/bin"))
+(setq exec-path (append exec-path '("/usr/texbin")))
+(setq exec-path (append exec-path '("/usr/bin")))
+(setq exec-path (append exec-path '("/usr/local/bin")))
 
 ;; ======== HISTORY ========
 (setq savehist-file "~/.emacs.d/savehist")
@@ -667,7 +673,33 @@ _SPC_ cancel	_o_nly this   	_d_elete
 (add-hook 'c-mode-hook #'smartparens-mode)
 (add-hook 'c-mode-hook #'evil-smartparens-mode)
 (sp-local-pair 'c-mode "{" nil :post-handlers '((my-create-newline-and-enter-sexp "RET")))
-(add-hook 'c-mode-hook 'flycheck-mode)
+
+(use-package irony
+  :config
+  (use-package company-irony)
+  (use-package company-irony-c-headers)
+  (company-mode)
+  (add-to-list 'company-backends 'company-irony-c-headers 'company-irony)
+  ;; (setq company-backends '(company-irony-c-headers company-irony company-dabbrev-code company-keywords company-yasnippet company-files company-dabbrev))
+  (setq company-backends (delete 'company-semantic company-backends))
+  )
+(add-hook 'c++-mode-hook 'irony-mode)
+(add-hook 'c-mode-hook 'irony-mode)
+(add-hook 'objc-mode-hook 'irony-mode)
+
+;; replace the `completion-at-point' and `complete-symbol' bindings in
+;; irony-mode's buffers by irony-mode's function
+(defun my-irony-mode-hook ()
+  (define-key irony-mode-map [remap completion-at-point]
+    'irony-completion-at-point-async)
+  (define-key irony-mode-map [remap complete-symbol]
+    'irony-completion-at-point-async))
+(add-hook 'irony-mode-hook 'my-irony-mode-hook)
+(add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options)
+(add-hook 'irony-mode-hook 'irony-eldoc)
+;; (add-hook 'c-mode-hook 'flycheck-mode)
+(eval-after-load 'flycheck
+ '(add-hook 'flycheck-mode-hook #'flycheck-irony-setup))
 
 ;; auto-insert include guards in header files
 ;; autoinsert C/C++ header
@@ -684,12 +716,21 @@ _SPC_ cancel	_o_nly this   	_d_elete
 
 (add-hook 'find-file-hook 'auto-insert)
 
-(add-hook 'c-mode-hook (lambda()
-                         (setq company-backends '(company-clang company-dabbrev-code company-keywords company-yasnippet company-files company-dabbrev))
-                         (company-mode 1)
-                         (global-set-key [C-return] 'company-complete-common)))
+;; (optional) adds CC special commands to `company-begin-commands' in order to
+;; trigger completion at interesting places, such as after scope operator
+;;     std::|
+(add-hook 'irony-mode-hook 'company-irony-setup-begin-commands)
 
-                                        ; Don't ask to reload TAGS if newer, just do it
+;; (defun my-irony-mode-hook ()
+;;   (define-key irony-mode-map
+;;       [remap completion-at-point] 'counsel-irony)
+;;   (define-key irony-mode-map
+;;       [remap complete-symbol] 'counsel-irony))
+
+;; (define-key c-mode-map  [(tab)] 'company-complete)
+;; (define-key c++-mode-map  [(tab)] 'company-complete)
+
+;; Don't ask to reload TAGS if newer, just do it
 (setq tags-revert-without-query 1)
 
 (defhydra hydra-c (:color red
@@ -699,6 +740,23 @@ _f_ flycheck
 "
   ("f" hydra-flycheck/body :exit t)
   )
+
+;; (use-package cmake-ide
+;;   :config
+;;   (cmake-ide-setup)
+;;   )
+;; (require 'cmake-ide)
+;; (cmake-ide-setup)
+;; ;; Set cmake-ide-flags-c++ to use C++11
+;; (setq cmake-ide-cmake-opts "-DCMAKE_TOOLCHAIN_FILE=/Users/matzy/Development/emsdk_portable/emscripten/1.37.9/cmake/Modules/Platform/Emscripten.cmake -DCMAKE_BUILD_TYPE=Debug")
+;; ;; (setq cmake-ide-flags-c (append '("-g4")))
+;; (setq cmake-ide-build-dir "~/Projects/IupEmscripten/BUILD/emscripten")
+;; ;; We want to be able to compile with a keyboard shortcut
+;; (global-set-key (kbd "C-c m") 'cmake-ide-compile)
+
+
+
+
 
 ;; ======== JAVASCRIPT ========
 (use-package js2-mode
@@ -1722,13 +1780,13 @@ Consider only documented, non-obsolete functions."
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
    (quote
-    ("dcb9fd142d390bb289fee1d1bb49cb67ab7422cd46baddf11f5c9b7ff756f64c" "28ec8ccf6190f6a73812df9bc91df54ce1d6132f18b4c8fcc85d45298569eb53" "7f6796a9b925f727bbe1781dc65f7f23c0aa4d4dc19613aa3cf96e41a96651e4" "50b66fad333100cc645a27ada899a7b1d44f1ceb32140ab8e88fedabfb7d0daf" "fec6c786b1d3088091715772839ac6051ed972b17991af04b50e9285a98c7463" "8ad35d6c2b35eacc328b732f0a4fe263abd96443a5075aa53b8535a9e8cb7eaf" "9a58c408a001318ce9b4eab64c620c8e8ebd55d4c52327e354f24d298fb6978f" "a9d2ed6e4266ea7f8c1f4a0d1af34a6282ad6ff91754bee5ec7c3b260ec721f4" "293b55c588c56fe062afe4b7a3a4b023712a26d26dc69ee89c347b30283a72eb" "9b59e147dbbde5e638ea1cde5ec0a358d5f269d27bd2b893a0947c4a867e14c1" "a8245b7cc985a0610d71f9852e9f2767ad1b852c2bdea6f4aadc12cce9c4d6d0" "8aebf25556399b58091e533e455dd50a6a9cba958cc4ebb0aab175863c25b9a4" "3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa" default)))
+    ("6a23db7bccf6288fd7c80475dc35804c73f9c9769ad527306d2e0eada1f8b466" "e9460a84d876da407d9e6accf9ceba453e2f86f8b86076f37c08ad155de8223c" "527df6ab42b54d2e5f4eec8b091bd79b2fa9a1da38f5addd297d1c91aa19b616" "16dd114a84d0aeccc5ad6fd64752a11ea2e841e3853234f19dc02a7b91f5d661" "3be1f5387122b935a26e02795196bc90860c57a62940f768f138b02383d9a257" "5a39d2a29906ab273f7900a2ae843e9aa29ed5d205873e1199af4c9ec921aaab" "4486ade2acbf630e78658cd6235a5c6801090c2694469a2a2b4b0e12227a64b9" "dcb9fd142d390bb289fee1d1bb49cb67ab7422cd46baddf11f5c9b7ff756f64c" "28ec8ccf6190f6a73812df9bc91df54ce1d6132f18b4c8fcc85d45298569eb53" "7f6796a9b925f727bbe1781dc65f7f23c0aa4d4dc19613aa3cf96e41a96651e4" "50b66fad333100cc645a27ada899a7b1d44f1ceb32140ab8e88fedabfb7d0daf" "fec6c786b1d3088091715772839ac6051ed972b17991af04b50e9285a98c7463" "8ad35d6c2b35eacc328b732f0a4fe263abd96443a5075aa53b8535a9e8cb7eaf" "9a58c408a001318ce9b4eab64c620c8e8ebd55d4c52327e354f24d298fb6978f" "a9d2ed6e4266ea7f8c1f4a0d1af34a6282ad6ff91754bee5ec7c3b260ec721f4" "293b55c588c56fe062afe4b7a3a4b023712a26d26dc69ee89c347b30283a72eb" "9b59e147dbbde5e638ea1cde5ec0a358d5f269d27bd2b893a0947c4a867e14c1" "a8245b7cc985a0610d71f9852e9f2767ad1b852c2bdea6f4aadc12cce9c4d6d0" "8aebf25556399b58091e533e455dd50a6a9cba958cc4ebb0aab175863c25b9a4" "3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa" default)))
  '(js-indent-level 2)
  '(js2-bounce-indent-p t)
  '(linum-format " %5i ")
  '(package-selected-packages
    (quote
-    (org-jira web-mode ivy-hydra auto-org-md org-id company-box skewer-mode skewer markdown-mode hydra org-bullets slime magit nord-theme eyebrowse evil-collection solarized-theme evil-magit ac-php company-php php-mode evil-cleverparens evil-smartparens smartparens tide indium js2-mode smart-mode-line sublime-themes counsel general evil)))
+    (flycheck-irony irony-eldoc cmake-ide atom-one-dark-theme atom-dark-theme base16-theme oceanic-theme org-jira web-mode ivy-hydra auto-org-md org-id company-box skewer-mode skewer markdown-mode hydra org-bullets slime magit nord-theme eyebrowse evil-collection solarized-theme evil-magit ac-php company-php php-mode evil-cleverparens evil-smartparens smartparens tide indium js2-mode smart-mode-line sublime-themes counsel general evil)))
  '(sp-highlight-pair-overlay nil))
 
 (custom-set-faces
