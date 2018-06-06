@@ -558,16 +558,16 @@ _SPC_ cancel	_o_nly this   	_d_elete
 
 
 ;; ======== COUNSEL GTAGS ========
-(use-package counsel-gtags)
-(add-hook 'c-mode-hook 'counsel-gtags-mode)
-(add-hook 'c++-mode-hook 'counsel-gtags-mode)
-(add-hook 'flycheck-mode-hook 'counsel-gtags-mode)
+;; (use-package counsel-gtags)
+;; ;; (add-hook 'c-mode-hook 'counsel-gtags-mode)
+;; ;; (add-hook 'c++-mode-hook 'counsel-gtags-mode)
+;; (add-hook 'flycheck-mode-hook 'counsel-gtags-mode)
 
-(with-eval-after-load 'counsel-gtags
-  (define-key counsel-gtags-mode-map (kbd "M-t") 'counsel-gtags-find-definition)
-  (define-key counsel-gtags-mode-map (kbd "M-r") 'counsel-gtags-find-reference)
-  (define-key counsel-gtags-mode-map (kbd "M-s") 'counsel-gtags-find-symbol)
-  (define-key counsel-gtags-mode-map (kbd "M-,") 'counsel-gtags-go-backward))
+;; (with-eval-after-load 'counsel-gtags
+;;   (define-key counsel-gtags-mode-map (kbd "M-t") 'counsel-gtags-find-definition)
+;;   (define-key counsel-gtags-mode-map (kbd "M-r") 'counsel-gtags-find-reference)
+;;   (define-key counsel-gtags-mode-map (kbd "M-s") 'counsel-gtags-find-symbol)
+;;   (define-key counsel-gtags-mode-map (kbd "M-,") 'counsel-gtags-go-backward))
 
 
 ;; ======== SPACELINE =========
@@ -674,32 +674,69 @@ _SPC_ cancel	_o_nly this   	_d_elete
 (add-hook 'c-mode-hook #'evil-smartparens-mode)
 (sp-local-pair 'c-mode "{" nil :post-handlers '((my-create-newline-and-enter-sexp "RET")))
 
-(use-package irony
+;;;;;;;; cquery setup
+;; options include irony, cquery, rtags, ggtags, and ycmd
+(use-package lsp-mode
   :config
-  (use-package company-irony)
-  (use-package company-irony-c-headers)
-  (company-mode)
-  (add-to-list 'company-backends 'company-irony-c-headers 'company-irony)
-  ;; (setq company-backends '(company-irony-c-headers company-irony company-dabbrev-code company-keywords company-yasnippet company-files company-dabbrev))
-  (setq company-backends (delete 'company-semantic company-backends))
-  )
-(add-hook 'c++-mode-hook 'irony-mode)
-(add-hook 'c-mode-hook 'irony-mode)
-(add-hook 'objc-mode-hook 'irony-mode)
+  (require 'lsp-imenu)
+  (add-hook 'lsp-after-open-hook 'lsp-enable-imenu))
 
-;; replace the `completion-at-point' and `complete-symbol' bindings in
-;; irony-mode's buffers by irony-mode's function
-(defun my-irony-mode-hook ()
-  (define-key irony-mode-map [remap completion-at-point]
-    'irony-completion-at-point-async)
-  (define-key irony-mode-map [remap complete-symbol]
-    'irony-completion-at-point-async))
-(add-hook 'irony-mode-hook 'my-irony-mode-hook)
-(add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options)
-(add-hook 'irony-mode-hook 'irony-eldoc)
-;; (add-hook 'c-mode-hook 'flycheck-mode)
-(eval-after-load 'flycheck
- '(add-hook 'flycheck-mode-hook #'flycheck-irony-setup))
+(use-package lsp-ui
+  :after lsp-mode
+  :hook (lsp-mode . lsp-ui-mode))
+
+(use-package cquery
+  :commands (lsp-cquery-enable)
+  :hook (c-mode-common . lsp-cquery-enable)
+  :custom
+  (cquery-executable "/Users/matzy/Development/cquery/BUILD/cquery")
+  (cquery-project-roots '("/Users/matzy/Projects/IupEmscripten/src" "/Users/matzy/Projects/IupEmscripten/include" "/Users/matzy/Projects/IupEmscripten/src/emscripten"))
+  ;; (cquery-extra-init-params '(:index (:comments 2) :cacheFormat "msgpack"))
+  (cquery-extra-init-params '(:completion (:detailedLabel t) :extraClangArguments ("-I/Users/matzy/Projects/IupEmscripten/src" "-I/Users/matzy/Projects/IupEmscripten/include"))))
+
+(use-package company-lsp
+  :after (cquery company)
+  :custom (company-lsp-enable-recompletion t)
+  :config (add-to-list 'company-backends 'company-lsp))
+
+(use-package ivy-xref
+  :after ivy
+  :custom (xref-show-xrefs-function #'ivy-xref-show-xrefs))
+
+;;;;;;;;;; irony setup
+;; (use-package irony
+;;   :init
+;;   (setq irony--compile-options
+;;         '(
+;;           "-I/Users/matzy/Projects/IupEmscripten/include"
+;;           "-I/Users/matzy/Projects/IupEmscripten/src")
+;;         )
+;;   :config
+;;   (use-package company-irony)
+;;   (use-package company-irony-c-headers)
+;;   (company-mode)
+;;   (eval-after-load 'company
+;;     '(add-to-list 'company-backends '(company-irony-c-headers company-irony)))
+;;   ;; (setq company-backends '(company-irony-c-headers company-irony company-dabbrev-code company-keywords company-yasnippet company-files company-dabbrev))
+;;   (setq company-backends (delete 'company-semantic company-backends))
+;;   )
+;; (add-hook 'c++-mode-hook 'irony-mode)
+;; (add-hook 'c-mode-hook 'irony-mode)
+;; (add-hook 'objc-mode-hook 'irony-mode)
+
+;; ;; replace the `completion-at-point' and `complete-symbol' bindings in
+;; ;; irony-mode's buffers by irony-mode's function
+;; (defun my-irony-mode-hook ()
+;;   (define-key irony-mode-map [remap completion-at-point]
+;;     'irony-completion-at-point-async)
+;;   (define-key irony-mode-map [remap complete-symbol]
+;;     'irony-completion-at-point-async))
+;; (add-hook 'irony-mode-hook 'my-irony-mode-hook)
+;; (add-hook 'irony-mode-hook 'irony-cdb-autosetup-compile-options)
+;; (add-hook 'irony-mode-hook 'irony-eldoc)
+;; ;; (add-hook 'c-mode-hook 'flycheck-mode)
+;; (eval-after-load 'flycheck
+;;  '(add-hook 'flycheck-mode-hook #'flycheck-irony-setup))
 
 ;; auto-insert include guards in header files
 ;; autoinsert C/C++ header
@@ -719,19 +756,10 @@ _SPC_ cancel	_o_nly this   	_d_elete
 ;; (optional) adds CC special commands to `company-begin-commands' in order to
 ;; trigger completion at interesting places, such as after scope operator
 ;;     std::|
-(add-hook 'irony-mode-hook 'company-irony-setup-begin-commands)
-
-;; (defun my-irony-mode-hook ()
-;;   (define-key irony-mode-map
-;;       [remap completion-at-point] 'counsel-irony)
-;;   (define-key irony-mode-map
-;;       [remap complete-symbol] 'counsel-irony))
-
-;; (define-key c-mode-map  [(tab)] 'company-complete)
-;; (define-key c++-mode-map  [(tab)] 'company-complete)
+;; (add-hook 'irony-mode-hook 'company-irony-setup-begin-commands)
 
 ;; Don't ask to reload TAGS if newer, just do it
-(setq tags-revert-without-query 1)
+;; (setq tags-revert-without-query 1)
 
 (defhydra hydra-c (:color red
                           :hint nil)
@@ -753,9 +781,6 @@ _f_ flycheck
 ;; (setq cmake-ide-build-dir "~/Projects/IupEmscripten/BUILD/emscripten")
 ;; ;; We want to be able to compile with a keyboard shortcut
 ;; (global-set-key (kbd "C-c m") 'cmake-ide-compile)
-
-
-
 
 
 ;; ======== JAVASCRIPT ========
@@ -1786,7 +1811,7 @@ Consider only documented, non-obsolete functions."
  '(linum-format " %5i ")
  '(package-selected-packages
    (quote
-    (flycheck-irony irony-eldoc cmake-ide atom-one-dark-theme atom-dark-theme base16-theme oceanic-theme org-jira web-mode ivy-hydra auto-org-md org-id company-box skewer-mode skewer markdown-mode hydra org-bullets slime magit nord-theme eyebrowse evil-collection solarized-theme evil-magit ac-php company-php php-mode evil-cleverparens evil-smartparens smartparens tide indium js2-mode smart-mode-line sublime-themes counsel general evil)))
+    (company-lsp flycheck-irony irony-eldoc cmake-ide atom-one-dark-theme atom-dark-theme base16-theme oceanic-theme org-jira web-mode ivy-hydra auto-org-md org-id company-box skewer-mode skewer markdown-mode hydra org-bullets slime magit nord-theme eyebrowse evil-collection solarized-theme evil-magit ac-php company-php php-mode evil-cleverparens evil-smartparens smartparens tide indium js2-mode smart-mode-line sublime-themes counsel general evil)))
  '(sp-highlight-pair-overlay nil))
 
 (custom-set-faces
