@@ -677,6 +677,7 @@ _SPC_ cancel	_o_nly this   	_d_elete
 ;;;;;;;; cquery setup
 ;; options include irony, cquery, rtags, ggtags, and ycmd
 (use-package lsp-mode
+  :defer t
   :config
   (require 'lsp-imenu)
   (add-hook 'lsp-after-open-hook 'lsp-enable-imenu))
