@@ -677,6 +677,7 @@ _SPC_ cancel	_o_nly this   	_d_elete
 ;;;;;;;; cquery setup
 ;; options include irony, cquery, rtags, ggtags, and ycmd
 (use-package lsp-mode
+  :defer t
   :config
   (require 'lsp-imenu)
   (add-hook 'lsp-after-open-hook 'lsp-enable-imenu))
@@ -695,7 +696,7 @@ _SPC_ cancel	_o_nly this   	_d_elete
   (cquery-extra-init-params '(:completion (:detailedLabel t) :extraClangArguments ("-I/Users/matzy/Projects/IupEmscripten/src" "-I/Users/matzy/Projects/IupEmscripten/include"))))
 
 (use-package company-lsp
-  :after (cquery company)
+  :after (lsp-mode company-mode)
   :custom (company-lsp-enable-recompletion t)
   :config (add-to-list 'company-backends 'company-lsp))
 
@@ -799,7 +800,7 @@ _f_ flycheck
   ;; (add-to-list 'company-backends 'company-tern)
   (add-hook 'js2-mode-hook (lambda ()
                              ;; (tern-mode)
-                             ;; (company-mode)
+                             (company-mode)
                              (smartparens-mode)
                              (evil-smartparens-mode)
                              (flycheck-mode)))
@@ -809,6 +810,23 @@ _f_ flycheck
   ;; unbind it.
   (define-key js-mode-map (kbd "M-.") nil)
   )
+
+;; javascript/typescript lsp - not bad but doesn't provide much that tide doesnt
+;; (use-package lsp-javascript-typescript
+;;   :init
+;;   (add-hook 'js2-mode-hook 'lsp-mode)
+;;   (add-hook 'js2-mode-hook 'company-mode)
+;;   (add-hook 'js2-mode-hook #'lsp-javascript-typescript-enable)
+;;   :config
+;;   (defun my-company-transformer (candidates)
+;;     (let ((completion-ignore-case t))
+;;       (all-completions (company-grab-symbol) candidates)))
+;;   (defun my-js-hook nil
+;;     (make-local-variable 'company-transformers)
+;;     (push 'my-company-transformer company-transformers))
+;;   (add-hook 'js2-mode-hook 'my-js-hook)
+;;   )
+
 
 (use-package js2-refactor
   :hook (js2-mode . js2-refactor-mode)
@@ -827,14 +845,9 @@ _f_ flycheck
 
 
 ;; setup mode hooks
-;; (add-hook 'js2-mode-hook #'smartparens-mode)
-;; (add-hook 'js2-mode-hook #'evil-smartparens-mode)
 (sp-local-pair 'js2-mode "{" nil :post-handlers '((my-create-newline-and-enter-sexp "RET")))
-;; (add-hook 'js2-mode-hook 'flycheck-mode)
-;; (add-hook 'js2-mode-hook #'js2-refactor-mode)
 (add-hook 'js2-mode-hook (lambda ()
                            (add-hook 'xref-backend-functions #'xref-js2-xref-backend nil t)))
-;; (add-hook 'js2-mode-hook 'add-node-modules-path)
 
 ;; indium
 (use-package indium
@@ -976,11 +989,17 @@ _f_ flycheck
   (add-hook 'js2-mode-hook #'setup-tide-mode)
   (add-to-list 'company-backends 'company-tide))
 
-;; configure smartparens
+;; typescript lsp (slow and not as many features as javascript-typescript-langserver)
+;; (require 'lsp-typescript)
+;;   (add-hook 'typescript-mode-hook 'lsp-mode)
+;;   (add-hook 'typescript-mode-hook 'company-mode)
+;;   (add-hook 'typescript-mode-hook #'lsp-typescript-enable)
+
+;; ;; configure smartparens
 (add-hook 'typescript-mode-hook #'smartparens-mode)
 (add-hook 'typescript-mode-hook #'evil-smartparens-mode)
 (sp-local-pair 'typescript-mode "{" nil :post-handlers '((my-create-newline-and-enter-sexp "RET")))
-;; (add-hook 'typescript-mode-hook #'setup-tide-mode)
+(add-hook 'typescript-mode-hook #'add-node-modules-path)
 
 (defhydra hydra-typescript (:color red
                                    :hint nil)
@@ -1022,15 +1041,15 @@ _f_ flycheck
   )
 
 ;; add completion details
-;; (setq tide-completion-detailed t)
+(setq tide-completion-detailed t)
 ;; aligns annotation to the right hand side
-;; (setq company-tooltip-align-annotations t)
+(setq company-tooltip-align-annotations t)
 
 ;; configure smartparens
-;; (add-hook 'rjsx-mode-hook #'smartparens-mode)
-;; (add-hook 'rjxs-mode-hook #'evil-smartparens-mode)
-;; (sp-local-pair 'rjsx-mode "{" nil :post-handlers '((my-create-newline-and-enter-sexp "RET")))
-;; (add-hook 'rjsx-mode-hook 'add-node-modules-path)
+(add-hook 'rjsx-mode-hook #'smartparens-mode)
+(add-hook 'rjxs-mode-hook #'evil-smartparens-mode)
+(sp-local-pair 'rjsx-mode "{" nil :post-handlers '((my-create-newline-and-enter-sexp "RET")))
+(add-hook 'rjsx-mode-hook 'add-node-modules-path)
 
 (defhydra hydra-react (:color red
                                    :hint nil)
@@ -1811,7 +1830,7 @@ Consider only documented, non-obsolete functions."
  '(linum-format " %5i ")
  '(package-selected-packages
    (quote
-    (company-lsp flycheck-irony irony-eldoc cmake-ide atom-one-dark-theme atom-dark-theme base16-theme oceanic-theme org-jira web-mode ivy-hydra auto-org-md org-id company-box skewer-mode skewer markdown-mode hydra org-bullets slime magit nord-theme eyebrowse evil-collection solarized-theme evil-magit ac-php company-php php-mode evil-cleverparens evil-smartparens smartparens tide indium js2-mode smart-mode-line sublime-themes counsel general evil)))
+    (ivy-xref lsp-ui company-lsp flycheck-irony irony-eldoc cmake-ide atom-one-dark-theme atom-dark-theme base16-theme oceanic-theme org-jira web-mode ivy-hydra auto-org-md org-id company-box skewer-mode skewer markdown-mode hydra org-bullets slime magit nord-theme eyebrowse evil-collection solarized-theme evil-magit ac-php company-php php-mode evil-cleverparens evil-smartparens smartparens tide indium js2-mode smart-mode-line sublime-themes counsel general evil)))
  '(sp-highlight-pair-overlay nil))
 
 (custom-set-faces
