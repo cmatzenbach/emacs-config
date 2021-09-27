@@ -52,8 +52,9 @@
 (setq package-archives '(("melpa". "http://melpa.org/packages/")
                          ("gnu" . "http://elpa.gnu.org/packages/")
                          ("org" . "https://orgmode.org/elpa/")
-                         ("marmalade" . "https://marmalade-repo.org/packages/")
-                         ("melpa-stable" . "https://melpa-stable.milkbox.net/packages/")))
+                         ;; melpa recommends not to use melpa-stable unless you have to
+                         ;; ("melpa-stable" . "https://stable.melpa.org/packages/")
+                         ))
 (package-initialize)
 
 ;; bootstrap 'use-package'
@@ -95,6 +96,27 @@
 (add-hook 'prog-mode-hook 'highlight-numbers-mode)
 
 
+;; ======== RANDOM/GENERAL PACKAGES ========
+(use-package page-break-lines)
+;; customized starting page dashboard
+(use-package dashboard
+  :ensure t
+  :config
+  (dashboard-setup-startup-hook)
+  (setq dashboard-startup-banner 'logo)
+  (setq dashboard-center-content t)
+  (setq dashboard-projects-backend 'projectile)
+  (setq dashboard-items '((recents  . 10)
+                        (bookmarks . 5)
+                        (projects . 8)
+                        ;; (agenda . 5)
+                        ;; (registers . 5)
+                        ))
+  (setq dashboard-set-heading-icons t)
+  (setq dashboard-set-file-icons t)
+  (setq dashboard-set-navigator t))
+
+
 ;; ======== COUNSEL/IVY/SWIPER ========
 (use-package counsel
   :diminish ivy-mode
@@ -107,7 +129,7 @@
         '((t . ivy--regex-ignore-order)))
   :bind
   ("C-s" . swiper)
-                                        ; https://www.reddit.com/r/emacs/comments/6i8rmb/noob_change_ctrlnp_to_vimlike_binding_for_ivy_and/
+  ;; https://www.reddit.com/r/emacs/comments/6i8rmb/noob_change_ctrlnp_to_vimlike_binding_for_ivy_and/
   (:map ivy-minibuffer-map
         ("C-h" . evil-delete-char) ; supposed to be (kbd "DEL")
         ("C-k" . ivy-previous-line)
@@ -124,6 +146,7 @@
   :init
   (setq evil-want-C-u-scroll t)
   (setq evil-want-integration nil)
+  (setq evil-want-keybinding nil)
   :config
   (evil-mode 1))
 
@@ -511,9 +534,9 @@ _SPC_ cancel	_o_nly this   	_d_elete
 (defvar company-mode/enable-yas t)
 ;; snippet sources
 (use-package yasnippet-snippets)
-(use-package php-auto-yasnippets)
+;; BUG: no longer exists in package managers
+;; (use-package php-auto-yasnippets)
 (setq php-auto-yasnippet-php-program "~/.emacs.d/config/Create-PHP-YASnippet.php")
-(define-key php-mode-map (kbd "C-c C-y") 'yas/create-php-snippet)
 
 
 ;; ======== FLYCHECK ========
@@ -550,11 +573,11 @@ _SPC_ cancel	_o_nly this   	_d_elete
   ("q"  nil))
 
 ;; ======== GGTAGS ========
-                                        ;(use-package ggtags)
-                                        ;(add-hook 'c-mode-common-hook
-                                        ;	  (lambda ()
-                                        ;	    (when (derived-mode-p 'c-mode 'c++-mode 'java-mode 'asm-mode)
-                                        ;	      (ggtags-mode 1))))
+;(use-package ggtags)
+;(add-hook 'c-mode-common-hook
+;	  (lambda ()
+;	    (when (derived-mode-p 'c-mode 'c++-mode 'java-mode 'asm-mode)
+;	      (ggtags-mode 1))))
 
 
 ;; ======== COUNSEL GTAGS ========
@@ -669,6 +692,28 @@ _SPC_ cancel	_o_nly this   	_d_elete
   (define-key projectile-mode-map (kbd "C-c p s s") 'counsel-projectile-ag))
 
 
+;; ======== LSP ========
+(use-package lsp-mode
+  :defer t
+  :config
+  (require 'lsp-ui-imenu)
+  (add-hook 'lsp-after-open-hook 'lsp-ui-enable-imenu))
+
+(use-package lsp-ui
+  :after lsp-mode
+  :hook (lsp-mode . lsp-ui-mode))
+
+
+;; ======== TREE-SITTER ========
+(use-package tree-sitter
+  :hook (typescript-mode . tree-sitter-hl-mode)
+  :config
+  (setf (alist-get 'typescript-tsx-mode tree-sitter-major-mode-language-alist) 'tsx))
+(use-package tree-sitter-langs)
+(global-tree-sitter-mode)
+(add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
+
+
 ;; ======== C-MODE ========
 (add-hook 'c-mode-hook #'smartparens-mode)
 (add-hook 'c-mode-hook #'evil-smartparens-mode)
@@ -676,15 +721,6 @@ _SPC_ cancel	_o_nly this   	_d_elete
 
 ;;;;;;;; cquery setup
 ;; options include irony, cquery, rtags, ggtags, and ycmd
-(use-package lsp-mode
-  :defer t
-  :config
-  (require 'lsp-imenu)
-  (add-hook 'lsp-after-open-hook 'lsp-enable-imenu))
-
-(use-package lsp-ui
-  :after lsp-mode
-  :hook (lsp-mode . lsp-ui-mode))
 
 (use-package cquery
   :commands (lsp-cquery-enable)
@@ -695,16 +731,18 @@ _SPC_ cancel	_o_nly this   	_d_elete
   ;; (cquery-extra-init-params '(:index (:comments 2) :cacheFormat "msgpack"))
   (cquery-extra-init-params '(:completion (:detailedLabel t) :extraClangArguments ("-I/Users/matzy/Projects/IupEmscripten/src" "-I/Users/matzy/Projects/IupEmscripten/include"))))
 
-(use-package company-lsp
-  :after (lsp-mode company-mode)
-  :custom (company-lsp-enable-recompletion t)
-  :config (add-to-list 'company-backends 'company-lsp))
+;; BUG: lsp-mode dropped company-lsp support
+;; https://github.com/emacs-lsp/lsp-mode/pull/1983
+;; (use-package company-lsp
+;;   :after (lsp-mode company-mode)
+;;   :custom (company-lsp-enable-recompletion t)
+;;   :config (add-to-list 'company-backends 'company-lsp))
 
 (use-package ivy-xref
   :after ivy
   :custom (xref-show-xrefs-function #'ivy-xref-show-xrefs))
 
-;;;;;;;;;; irony setup
+;; irony setup
 ;; (use-package irony
 ;;   :init
 ;;   (setq irony--compile-options
@@ -970,6 +1008,14 @@ _f_ flycheck
 
 
 ;; ======== TYPESCRIPT ========
+(use-package typescript-mode
+  :mode (rx ".ts" string-end)
+  :init
+  (define-derived-mode typescript-tsx-mode typescript-mode "typescript-tsx")
+  (add-to-list 'auto-mode-alist (cons (rx ".tsx" string-end) #'typescript-tsx-mode))
+  :config
+  (setq typescript-indent-level 2))
+
 (defun setup-tide-mode ()
   (interactive)
   (tide-setup)
@@ -1084,7 +1130,8 @@ _f_ flycheck
 
 ;; ======== PHP ========
 (use-package php-mode
-  :defer t)
+  :defer t
+  :config (define-key php-mode-map (kbd "C-c C-y") 'yas/create-php-snippet))
 (use-package company-php
   :after php-mode)
 (add-to-list 'auto-mode-alist '("\\.php\\'" . php-mode))
@@ -1100,6 +1147,9 @@ _f_ flycheck
 (add-hook 'php-mode-hook #'smartparens-mode)
 (add-hook 'php-mode-hook #'evil-smartparens-mode)
 (sp-local-pair 'php-mode "{" nil :post-handlers '((my-create-newline-and-enter-sexp "RET")))
+
+;; yasnippet additions
+
 
 ;; tool to test HTTP REST webservices
 (use-package restclient
@@ -1213,7 +1263,7 @@ _f_ flycheck
                             (use-package slime-company)
                             (company-mode t)))
 
-                                        ;(setq slime-contribs '(slime-fancy slime-company))
+;(setq slime-contribs '(slime-fancy slime-company))
 (slime-setup '(slime-fancy slime-company))
 
 (add-hook 'lisp-mode-hook #'smartparens-mode)
@@ -1343,9 +1393,8 @@ _f_ flycheck
 
 
 ;; ======== MAGIT ========
-(use-package evil-magit)
-
 ;; full screen magit-status
+(use-package magit)
 (defadvice magit-status (around magit-fullscreen activate)
   (window-configuration-to-register :magit-fullscreen)
   ad-do-it
@@ -1357,7 +1406,8 @@ _f_ flycheck
   (kill-buffer)
   (jump-to-register :magit-fullscreen))
 
-(define-key magit-status-mode-map (kbd "q") 'magit-quit-session)
+(with-eval-after-load 'magit
+  (define-key magit-status-mode-map (kbd "q") 'magit-quit-session))
 
 ;; ======== HELPFUL ========
 (use-package helpful)
@@ -1823,14 +1873,12 @@ Consider only documented, non-obsolete functions."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
-   (quote
-    ("6a23db7bccf6288fd7c80475dc35804c73f9c9769ad527306d2e0eada1f8b466" "e9460a84d876da407d9e6accf9ceba453e2f86f8b86076f37c08ad155de8223c" "527df6ab42b54d2e5f4eec8b091bd79b2fa9a1da38f5addd297d1c91aa19b616" "16dd114a84d0aeccc5ad6fd64752a11ea2e841e3853234f19dc02a7b91f5d661" "3be1f5387122b935a26e02795196bc90860c57a62940f768f138b02383d9a257" "5a39d2a29906ab273f7900a2ae843e9aa29ed5d205873e1199af4c9ec921aaab" "4486ade2acbf630e78658cd6235a5c6801090c2694469a2a2b4b0e12227a64b9" "dcb9fd142d390bb289fee1d1bb49cb67ab7422cd46baddf11f5c9b7ff756f64c" "28ec8ccf6190f6a73812df9bc91df54ce1d6132f18b4c8fcc85d45298569eb53" "7f6796a9b925f727bbe1781dc65f7f23c0aa4d4dc19613aa3cf96e41a96651e4" "50b66fad333100cc645a27ada899a7b1d44f1ceb32140ab8e88fedabfb7d0daf" "fec6c786b1d3088091715772839ac6051ed972b17991af04b50e9285a98c7463" "8ad35d6c2b35eacc328b732f0a4fe263abd96443a5075aa53b8535a9e8cb7eaf" "9a58c408a001318ce9b4eab64c620c8e8ebd55d4c52327e354f24d298fb6978f" "a9d2ed6e4266ea7f8c1f4a0d1af34a6282ad6ff91754bee5ec7c3b260ec721f4" "293b55c588c56fe062afe4b7a3a4b023712a26d26dc69ee89c347b30283a72eb" "9b59e147dbbde5e638ea1cde5ec0a358d5f269d27bd2b893a0947c4a867e14c1" "a8245b7cc985a0610d71f9852e9f2767ad1b852c2bdea6f4aadc12cce9c4d6d0" "8aebf25556399b58091e533e455dd50a6a9cba958cc4ebb0aab175863c25b9a4" "3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa" default)))
+   '("6a23db7bccf6288fd7c80475dc35804c73f9c9769ad527306d2e0eada1f8b466" "e9460a84d876da407d9e6accf9ceba453e2f86f8b86076f37c08ad155de8223c" "527df6ab42b54d2e5f4eec8b091bd79b2fa9a1da38f5addd297d1c91aa19b616" "16dd114a84d0aeccc5ad6fd64752a11ea2e841e3853234f19dc02a7b91f5d661" "3be1f5387122b935a26e02795196bc90860c57a62940f768f138b02383d9a257" "5a39d2a29906ab273f7900a2ae843e9aa29ed5d205873e1199af4c9ec921aaab" "4486ade2acbf630e78658cd6235a5c6801090c2694469a2a2b4b0e12227a64b9" "dcb9fd142d390bb289fee1d1bb49cb67ab7422cd46baddf11f5c9b7ff756f64c" "28ec8ccf6190f6a73812df9bc91df54ce1d6132f18b4c8fcc85d45298569eb53" "7f6796a9b925f727bbe1781dc65f7f23c0aa4d4dc19613aa3cf96e41a96651e4" "50b66fad333100cc645a27ada899a7b1d44f1ceb32140ab8e88fedabfb7d0daf" "fec6c786b1d3088091715772839ac6051ed972b17991af04b50e9285a98c7463" "8ad35d6c2b35eacc328b732f0a4fe263abd96443a5075aa53b8535a9e8cb7eaf" "9a58c408a001318ce9b4eab64c620c8e8ebd55d4c52327e354f24d298fb6978f" "a9d2ed6e4266ea7f8c1f4a0d1af34a6282ad6ff91754bee5ec7c3b260ec721f4" "293b55c588c56fe062afe4b7a3a4b023712a26d26dc69ee89c347b30283a72eb" "9b59e147dbbde5e638ea1cde5ec0a358d5f269d27bd2b893a0947c4a867e14c1" "a8245b7cc985a0610d71f9852e9f2767ad1b852c2bdea6f4aadc12cce9c4d6d0" "8aebf25556399b58091e533e455dd50a6a9cba958cc4ebb0aab175863c25b9a4" "3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa" default))
  '(js-indent-level 2)
  '(js2-bounce-indent-p t)
  '(linum-format " %5i ")
  '(package-selected-packages
-   (quote
-    (ivy-xref lsp-ui company-lsp flycheck-irony irony-eldoc cmake-ide atom-one-dark-theme atom-dark-theme base16-theme oceanic-theme org-jira web-mode ivy-hydra auto-org-md org-id company-box skewer-mode skewer markdown-mode hydra org-bullets slime magit nord-theme eyebrowse evil-collection solarized-theme evil-magit ac-php company-php php-mode evil-cleverparens evil-smartparens smartparens tide indium js2-mode smart-mode-line sublime-themes counsel general evil)))
+   '(dashboard page-break-lines tree-sitter-langs tree-sitter ivy-xref lsp-ui company-lsp flycheck-irony irony-eldoc cmake-ide atom-one-dark-theme atom-dark-theme base16-theme oceanic-theme org-jira web-mode ivy-hydra auto-org-md org-id company-box skewer-mode skewer markdown-mode hydra org-bullets slime magit nord-theme eyebrowse evil-collection solarized-theme evil-magit ac-php company-php php-mode evil-cleverparens evil-smartparens smartparens tide indium js2-mode smart-mode-line sublime-themes counsel general evil))
  '(sp-highlight-pair-overlay nil))
 
 (custom-set-faces
