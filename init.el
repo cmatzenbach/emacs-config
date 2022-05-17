@@ -80,6 +80,7 @@
 (load-user-file "appearance.el")
 ;; load manually installed local packages
 (add-to-list 'load-path "~/.emacs.d/local-packages/")
+(add-to-list 'load-path "~/.emacs.d/local-packages/tsi.el/")
 ;; (add-to-list 'load-path "~/.emacs.d/config/")
 (load "let-alist-1.0.5.el")
 (load "highlight-escape-sequences.el")
@@ -603,75 +604,81 @@ _SPC_ cancel	_o_nly this   	_d_elete
                                         ;  :after spaceline
                                         ;  :config (spaceline-all-the-icons-theme))
                                         ;(setq spaceline-all-the-icons-separator-type 'arrow) 
-(use-package powerline
+;; (use-package powerline
+;;   :ensure t
+;;   :config
+
+;;   (defun make-rect (color height width)
+;;     "Create an XPM bitmap."
+;;     (when window-system
+;;       (propertize
+;;        " " 'display
+;;        (let ((data nil)
+;;              (i 0))
+;;          (setq data (make-list height (make-list width 1)))
+;;          (pl/make-xpm "percent" color color (reverse data))))))
+
+
+;;   (defun powerline-mode-icon ()
+;;     (let ((icon (all-the-icons-icon-for-buffer)))
+;;       (unless (symbolp icon) ;; This implies it's the major mode
+;;         (format " %s"
+;;                 (propertize icon
+;;                             'help-echo (format "Major-mode: `%s`" major-mode)
+;;                             'face `(:height 1.2 :family ,(all-the-icons-icon-family-for-buffer)))))))
+
+
+;;   (setq-default mode-line-format 
+;;                 '("%e"
+;;                   (:eval
+;;                    (let* ((active (powerline-selected-window-active))
+;;                           (modified (buffer-modified-p))
+;;                           (face1 (if active 'powerline-active1 'powerline-inactive1))
+;;                           (face2 (if active 'powerline-active2 'powerline-inactive2))
+;;                           (bar-color (cond ((and active modified) (face-foreground 'error))
+;;                                            (active (face-background 'cursor))
+;;                                            (t (face-background 'tooltip))))
+;;                           (lhs (list
+;;                                 (make-rect bar-color 30 3)
+;;                                 (when modified
+;;                                   (concat
+;;                                    " "
+;;                                    (all-the-icons-faicon "floppy-o"
+;;                                                          :face (when active 'error)
+;;                                                          :v-adjust -0.01)))
+;;                                 " "
+;;                                 (powerline-buffer-id)
+;;                                 ))
+;;                           (center (list
+;;                                    " "
+;;                                    (powerline-mode-icon)
+;;                                    " "
+;;                                    (powerline-major-mode)
+;;                                    " "))
+;;                           (rhs (list
+;;                                 (format "%s" (eyebrowse--get 'current-slot))
+;;                                 " | "
+;;                                 (powerline-raw "%l:%c" 'face1 'r)
+;;                                 " | "
+;;                                 (powerline-raw "%6p" 'face1 'r)
+;;                                 (powerline-hud 'highlight 'region 1)
+;;                                 " "
+;;                                 ))
+;;                           )
+;;                      (concat
+;;                       (powerline-render lhs)
+;;                       ;; changed bg color - variables changed from face1/face2 to bar-color 
+;;                       (powerline-fill-center bar-color (/ (powerline-width center) 1.0)) ;;changed from 2.0 - seems to center better on yoga3
+;;                       (powerline-render center)
+;;                       (powerline-fill bar-color (powerline-width rhs))
+;;                       (powerline-render rhs))))))
+;;   )
+
+;; ======== DOOM MODELINE ========
+;; since my custom powerline broke for js/ts
+(use-package doom-modeline
   :ensure t
-  :config
-
-  (defun make-rect (color height width)
-    "Create an XPM bitmap."
-    (when window-system
-      (propertize
-       " " 'display
-       (let ((data nil)
-             (i 0))
-         (setq data (make-list height (make-list width 1)))
-         (pl/make-xpm "percent" color color (reverse data))))))
-
-
-  (defun powerline-mode-icon ()
-    (let ((icon (all-the-icons-icon-for-buffer)))
-      (unless (symbolp icon) ;; This implies it's the major mode
-        (format " %s"
-                (propertize icon
-                            'help-echo (format "Major-mode: `%s`" major-mode)
-                            'face `(:height 1.2 :family ,(all-the-icons-icon-family-for-buffer)))))))
-
-
-  (setq-default mode-line-format 
-                '("%e"
-                  (:eval
-                   (let* ((active (powerline-selected-window-active))
-                          (modified (buffer-modified-p))
-                          (face1 (if active 'powerline-active1 'powerline-inactive1))
-                          (face2 (if active 'powerline-active2 'powerline-inactive2))
-                          (bar-color (cond ((and active modified) (face-foreground 'error))
-                                           (active (face-background 'cursor))
-                                           (t (face-background 'tooltip))))
-                          (lhs (list
-                                (make-rect bar-color 30 3)
-                                (when modified
-                                  (concat
-                                   " "
-                                   (all-the-icons-faicon "floppy-o"
-                                                         :face (when active 'error)
-                                                         :v-adjust -0.01)))
-                                " "
-                                (powerline-buffer-id)
-                                ))
-                          (center (list
-                                   " "
-                                   (powerline-mode-icon)
-                                   " "
-                                   (powerline-major-mode)
-                                   " "))
-                          (rhs (list
-                                (format "%s" (eyebrowse--get 'current-slot))
-                                " | "
-                                (powerline-raw "%l:%c" 'face1 'r)
-                                " | "
-                                (powerline-raw "%6p" 'face1 'r)
-                                (powerline-hud 'highlight 'region 1)
-                                " "
-                                ))
-                          )
-                     (concat
-                      (powerline-render lhs)
-                      ;; changed bg color - variables changed from face1/face2 to bar-color 
-                      (powerline-fill-center bar-color (/ (powerline-width center) 1.0)) ;;changed from 2.0 - seems to center better on yoga3
-                      (powerline-render center)
-                      (powerline-fill bar-color (powerline-width rhs))
-                      (powerline-render rhs))))))
-  )
+  :init (doom-modeline-mode 1))
 
 
 ;; ======== PROJECTILE ========
@@ -705,13 +712,19 @@ _SPC_ cancel	_o_nly this   	_d_elete
 
 
 ;; ======== TREE-SITTER ========
-(use-package tree-sitter
-  :hook (typescript-mode . tree-sitter-hl-mode)
-  :config
-  (setf (alist-get 'typescript-tsx-mode tree-sitter-major-mode-language-alist) 'tsx))
+;; (use-package tree-sitter
+;;   :hook (typescript-mode . tree-sitter-hl-mode)
+;;   :config
+;;   (setf (alist-get 'typescript-tsx-mode tree-sitter-major-mode-language-alist) 'tsx))
+(use-package tree-sitter)
 (use-package tree-sitter-langs)
 (global-tree-sitter-mode)
 (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
+(with-eval-after-load 'tree-sitter-langs
+  (tree-sitter-require 'tsx)
+  (add-to-list 'tree-sitter-major-mode-language-alist '(typescript-mode . tsx))
+  (tree-sitter-require 'json)
+  (add-to-list 'tree-sitter-major-mode-language-alist '(bbjson-mode . json)))
 
 
 ;; ======== C-MODE ========
@@ -1008,13 +1021,16 @@ _f_ flycheck
 
 
 ;; ======== TYPESCRIPT ========
+;; (use-package typescript-mode
+;;   :mode (rx ".ts" string-end)
+;;   :init
+;;   (define-derived-mode typescript-tsx-mode typescript-mode "typescript-tsx")
+;;   (add-to-list 'auto-mode-alist (cons (rx ".tsx" string-end) #'typescript-tsx-mode))
+;;   :config
+;;   (setq typescript-indent-level 2))
 (use-package typescript-mode
-  :mode (rx ".ts" string-end)
-  :init
-  (define-derived-mode typescript-tsx-mode typescript-mode "typescript-tsx")
-  (add-to-list 'auto-mode-alist (cons (rx ".tsx" string-end) #'typescript-tsx-mode))
-  :config
-  (setq typescript-indent-level 2))
+  :defer t)
+(require 'tsi-typescript)
 
 (defun setup-tide-mode ()
   (interactive)
@@ -1025,15 +1041,26 @@ _f_ flycheck
   (tide-hl-identifier-mode +1)
   (company-mode +1)) 
 
+
 (use-package tide
   :config
   (setq company-tooltip-align-annotations t)
   (setq tide-completion-detailed t)
   ;; (add-hook 'before-save-hook 'tide-format-before-save)
-  (add-hook 'typescript-mode-hook #'setup-tide-mode)
+  ;; (add-hook 'typescript-mode-hook #'setup-tide-mode)
   (add-hook 'rjsx-mode-hook #'setup-tide-mode)
   (add-hook 'js2-mode-hook #'setup-tide-mode)
   (add-to-list 'company-backends 'company-tide))
+
+(add-hook
+ 'typescript-mode-hook
+ (lambda ()
+   (setup-tide-mode)
+   (tree-sitter-mode)
+   (tree-sitter-hl-mode)
+   (tsi-typescript-mode)))
+(push '("\\.js[x]?\\'" . typescript-mode) auto-mode-alist)
+(push '("\\.ts[x]?\\'" . typescript-mode) auto-mode-alist)
 
 ;; typescript lsp (slow and not as many features as javascript-typescript-langserver)
 ;; (require 'lsp-typescript)
@@ -1042,10 +1069,10 @@ _f_ flycheck
 ;;   (add-hook 'typescript-mode-hook #'lsp-typescript-enable)
 
 ;; ;; configure smartparens
-(add-hook 'typescript-mode-hook #'smartparens-mode)
-(add-hook 'typescript-mode-hook #'evil-smartparens-mode)
-(sp-local-pair 'typescript-mode "{" nil :post-handlers '((my-create-newline-and-enter-sexp "RET")))
-(add-hook 'typescript-mode-hook #'add-node-modules-path)
+;; (add-hook 'typescript-mode-hook #'smartparens-mode)
+;; (add-hook 'typescript-mode-hook #'evil-smartparens-mode)
+;; (sp-local-pair 'typescript-mode "{" nil :post-handlers '((my-create-newline-and-enter-sexp "RET")))
+;; (add-hook 'typescript-mode-hook #'add-node-modules-path)
 
 (defhydra hydra-typescript (:color red
                                    :hint nil)
@@ -1873,12 +1900,12 @@ Consider only documented, non-obsolete functions."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
-   '("6a23db7bccf6288fd7c80475dc35804c73f9c9769ad527306d2e0eada1f8b466" "e9460a84d876da407d9e6accf9ceba453e2f86f8b86076f37c08ad155de8223c" "527df6ab42b54d2e5f4eec8b091bd79b2fa9a1da38f5addd297d1c91aa19b616" "16dd114a84d0aeccc5ad6fd64752a11ea2e841e3853234f19dc02a7b91f5d661" "3be1f5387122b935a26e02795196bc90860c57a62940f768f138b02383d9a257" "5a39d2a29906ab273f7900a2ae843e9aa29ed5d205873e1199af4c9ec921aaab" "4486ade2acbf630e78658cd6235a5c6801090c2694469a2a2b4b0e12227a64b9" "dcb9fd142d390bb289fee1d1bb49cb67ab7422cd46baddf11f5c9b7ff756f64c" "28ec8ccf6190f6a73812df9bc91df54ce1d6132f18b4c8fcc85d45298569eb53" "7f6796a9b925f727bbe1781dc65f7f23c0aa4d4dc19613aa3cf96e41a96651e4" "50b66fad333100cc645a27ada899a7b1d44f1ceb32140ab8e88fedabfb7d0daf" "fec6c786b1d3088091715772839ac6051ed972b17991af04b50e9285a98c7463" "8ad35d6c2b35eacc328b732f0a4fe263abd96443a5075aa53b8535a9e8cb7eaf" "9a58c408a001318ce9b4eab64c620c8e8ebd55d4c52327e354f24d298fb6978f" "a9d2ed6e4266ea7f8c1f4a0d1af34a6282ad6ff91754bee5ec7c3b260ec721f4" "293b55c588c56fe062afe4b7a3a4b023712a26d26dc69ee89c347b30283a72eb" "9b59e147dbbde5e638ea1cde5ec0a358d5f269d27bd2b893a0947c4a867e14c1" "a8245b7cc985a0610d71f9852e9f2767ad1b852c2bdea6f4aadc12cce9c4d6d0" "8aebf25556399b58091e533e455dd50a6a9cba958cc4ebb0aab175863c25b9a4" "3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa" default))
+   '("a0be7a38e2de974d1598cf247f607d5c1841dbcef1ccd97cded8bea95a7c7639" "835868dcd17131ba8b9619d14c67c127aa18b90a82438c8613586331129dda63" "e6f3a4a582ffb5de0471c9b640a5f0212ccf258a987ba421ae2659f1eaa39b09" "6a23db7bccf6288fd7c80475dc35804c73f9c9769ad527306d2e0eada1f8b466" "e9460a84d876da407d9e6accf9ceba453e2f86f8b86076f37c08ad155de8223c" "527df6ab42b54d2e5f4eec8b091bd79b2fa9a1da38f5addd297d1c91aa19b616" "16dd114a84d0aeccc5ad6fd64752a11ea2e841e3853234f19dc02a7b91f5d661" "3be1f5387122b935a26e02795196bc90860c57a62940f768f138b02383d9a257" "5a39d2a29906ab273f7900a2ae843e9aa29ed5d205873e1199af4c9ec921aaab" "4486ade2acbf630e78658cd6235a5c6801090c2694469a2a2b4b0e12227a64b9" "dcb9fd142d390bb289fee1d1bb49cb67ab7422cd46baddf11f5c9b7ff756f64c" "28ec8ccf6190f6a73812df9bc91df54ce1d6132f18b4c8fcc85d45298569eb53" "7f6796a9b925f727bbe1781dc65f7f23c0aa4d4dc19613aa3cf96e41a96651e4" "50b66fad333100cc645a27ada899a7b1d44f1ceb32140ab8e88fedabfb7d0daf" "fec6c786b1d3088091715772839ac6051ed972b17991af04b50e9285a98c7463" "8ad35d6c2b35eacc328b732f0a4fe263abd96443a5075aa53b8535a9e8cb7eaf" "9a58c408a001318ce9b4eab64c620c8e8ebd55d4c52327e354f24d298fb6978f" "a9d2ed6e4266ea7f8c1f4a0d1af34a6282ad6ff91754bee5ec7c3b260ec721f4" "293b55c588c56fe062afe4b7a3a4b023712a26d26dc69ee89c347b30283a72eb" "9b59e147dbbde5e638ea1cde5ec0a358d5f269d27bd2b893a0947c4a867e14c1" "a8245b7cc985a0610d71f9852e9f2767ad1b852c2bdea6f4aadc12cce9c4d6d0" "8aebf25556399b58091e533e455dd50a6a9cba958cc4ebb0aab175863c25b9a4" "3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa" default))
  '(js-indent-level 2)
  '(js2-bounce-indent-p t)
  '(linum-format " %5i ")
  '(package-selected-packages
-   '(dashboard page-break-lines tree-sitter-langs tree-sitter ivy-xref lsp-ui company-lsp flycheck-irony irony-eldoc cmake-ide atom-one-dark-theme atom-dark-theme base16-theme oceanic-theme org-jira web-mode ivy-hydra auto-org-md org-id company-box skewer-mode skewer markdown-mode hydra org-bullets slime magit nord-theme eyebrowse evil-collection solarized-theme evil-magit ac-php company-php php-mode evil-cleverparens evil-smartparens smartparens tide indium js2-mode smart-mode-line sublime-themes counsel general evil))
+   '(doom-themes dashboard page-break-lines tree-sitter-langs tree-sitter ivy-xref lsp-ui company-lsp flycheck-irony irony-eldoc cmake-ide atom-one-dark-theme atom-dark-theme base16-theme oceanic-theme org-jira web-mode ivy-hydra auto-org-md org-id company-box skewer-mode skewer markdown-mode hydra org-bullets slime magit nord-theme eyebrowse evil-collection solarized-theme evil-magit ac-php company-php php-mode evil-cleverparens evil-smartparens smartparens tide indium js2-mode smart-mode-line sublime-themes counsel general evil))
  '(sp-highlight-pair-overlay nil))
 
 (custom-set-faces
