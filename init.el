@@ -1,13 +1,69 @@
+;; ======== TEMP BUGFIX FOR EMACS 28 MACRO CHANGE ========
+(defmacro define-obsolete-variable-alias (obsolete-name current-name &optional when docstring)
+  "Make OBSOLETE-NAME a variable alias for CURRENT-NAME and mark it obsolete.
+WHEN should be a string indicating when the variable was first
+made obsolete, for example a date or a release number.
+This macro evaluates all its parameters, and both OBSOLETE-NAME
+and CURRENT-NAME should be symbols, so a typical usage would look like:
+  (define-obsolete-variable-alias 'foo-thing 'bar-thing \"27.1\")
+This macro uses `defvaralias' and `make-obsolete-variable' (which see).
+See the Info node `(elisp)Variable Aliases' for more details.
+If CURRENT-NAME is a defcustom or a defvar (more generally, any variable
+where OBSOLETE-NAME may be set, e.g. in an init file, before the
+alias is defined), then the define-obsolete-variable-alias
+statement should be evaluated before the defcustom, if user
+customizations are to be respected.  The simplest way to achieve
+this is to place the alias statement before the defcustom (this
+is not necessary for aliases that are autoloaded, or in files
+dumped with Emacs).  This is so that any user customizations are
+applied before the defcustom tries to initialize the
+variable (this is due to the way `defvaralias' works).
+For the benefit of Customize, if OBSOLETE-NAME has
+any of the following properties, they are copied to
+CURRENT-NAME, if it does not already have them:
+`saved-value', `saved-variable-comment'."
+  (declare (doc-string 4)
+           (advertised-calling-convention
+            (obsolete-name current-name when &optional docstring) "23.1"))
+  `(progn
+     (defvaralias ,obsolete-name ,current-name ,docstring)
+     (dolist (prop '(saved-value saved-variable-comment))
+       (and (get ,obsolete-name prop)
+            (null (get ,current-name prop))
+            (put ,current-name prop (get ,obsolete-name prop))))
+     (make-obsolete-variable ,obsolete-name ,current-name ,when)))
+
+(defmacro define-obsolete-face-alias (obsolete-face current-face &optional when)
+  "Make OBSOLETE-FACE a face alias for CURRENT-FACE and mark it obsolete.
+WHEN should be a string indicating when the face was first made
+obsolete, for example a date or a release number."
+  `(progn (put ,obsolete-face 'face-alias ,current-face)
+          (put ,obsolete-face 'obsolete-face (or (purecopy ,when) t))))
+
+(defmacro define-obsolete-function-alias (obsolete-name current-name &optional when docstring)
+  "Set OBSOLETE-NAME's function definition to CURRENT-NAME and mark it obsolete.
+\(define-obsolete-function-alias \\='old-fun \\='new-fun \"22.1\" \"old-fun's doc.\")
+is equivalent to the following two lines of code:
+\(defalias \\='old-fun \\='new-fun \"old-fun's doc.\")
+\(make-obsolete \\='old-fun \\='new-fun \"22.1\")
+WHEN should be a string indicating when the function was first
+made obsolete, for example a date or a release number.
+See the docstrings of `defalias' and `make-obsolete' for more details."
+  (declare (doc-string 4))
+  `(progn (defalias ,obsolete-name ,current-name ,docstring)
+          (make-obsolete ,obsolete-name ,current-name ,when)))
+
+
 ;; ======== SANE DEFAULTS ========
 (setq delete-old-versions -1 )		; delete excess backup versions silently
 (setq version-control t )		; use version control
 (setq vc-make-backup-files t )		; make backups file even when in version controlled dir
 (setq backup-directory-alist `(("." . "~/.emacs.d/backups")) ) ; which directory to put backups file
 (setq vc-follow-symlinks t )				       ; don't ask for confirmation when opening symlinked file
-(setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto-save-list/" t)) ) ;transform backups file name
-(setq inhibit-startup-screen t )	; inhibit useless and old-school startup screen
-(setq ring-bell-function 'ignore )	; silent bell when you make a mistake
-(setq coding-system-for-read 'utf-8 )	; use utf-8 by default
+(setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto-save-list/" t))) ;; transform backups file name
+(setq inhibit-startup-screen t)	;; inhibit useless and old-school startup screen
+(setq ring-bell-function 'ignore)	;; silent bell when you make a mistake
+(setq coding-system-for-read 'utf-8)	;; use utf-8 by default
 (setq coding-system-for-write 'utf-8 )
 (setq sentence-end-double-space nil)	; sentence SHOULD end with only a point.
 (setq fill-column 80)		; toggle wrapping text at the 80th character
@@ -66,6 +122,16 @@
 (setq use-package-always-ensure t)
 ;; TESTING enable imenu support for use-package
 ;; (setq use-package-enable-imenu-support t)
+(unless (package-installed-p 'quelpa)
+  (with-temp-buffer
+    (url-insert-file-contents "https://raw.githubusercontent.com/quelpa/quelpa/master/quelpa.el")
+    (eval-buffer)
+    (quelpa-self-upgrade)))
+(quelpa
+ '(quelpa-use-package
+   :fetcher git
+   :url "https://github.com/quelpa/quelpa-use-package.git"))
+(require 'quelpa-use-package)
 
 
 ;; ======== LOCAL CONFIG FILES ========
@@ -694,24 +760,35 @@ _SPC_ cancel	_o_nly this   	_d_elete
 
 ;; ======== LSP ========
 (use-package lsp-mode
+  :ensure t
   :defer t
-  :config
-  (require 'lsp-ui-imenu)
-  (add-hook 'lsp-after-open-hook 'lsp-ui-enable-imenu))
+  ;; :config
+  ;; (require 'lsp-ui-imenu)
+  ;; (add-hook 'lsp-after-open-hook 'lsp-ui-enable-imenu)
+  )
 
 (use-package lsp-ui
-  :after lsp-mode
-  :hook (lsp-mode . lsp-ui-mode))
+  :ensure t
+  :config
+  (define-key lsp-ui-mode-map [remap xref-find-definitions] #'lsp-ui-peek-find-definitions)
+  (define-key lsp-ui-mode-map [remap xref-find-references] #'lsp-ui-peek-find-references)
+  (lsp-ui-peek-jump-backward)
+  (lsp-ui-peek-jump-forward))
 
 
 ;; ======== TREE-SITTER ========
 (use-package tree-sitter
+  :ensure t
   :hook (typescript-mode . tree-sitter-hl-mode)
   :config
-  (setf (alist-get 'typescript-tsx-mode tree-sitter-major-mode-language-alist) 'tsx))
-(use-package tree-sitter-langs)
-(global-tree-sitter-mode)
-(add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
+  (global-tree-sitter-mode)
+  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
+  ;; (setf (alist-get 'typescript-tsx-mode tree-sitter-major-mode-language-alist) 'tsx)
+  )
+
+(use-package tree-sitter-langs
+  :ensure t
+  :after tree-sitter)
 
 
 ;; ======== C-MODE ========
@@ -1011,10 +1088,11 @@ _f_ flycheck
 (use-package typescript-mode
   :mode (rx ".ts" string-end)
   :init
-  (define-derived-mode typescript-tsx-mode typescript-mode "typescript-tsx")
-  (add-to-list 'auto-mode-alist (cons (rx ".tsx" string-end) #'typescript-tsx-mode))
+  ;; (define-derived-mode typescript-tsx-mode typescript-mode "typescript-tsx")
+  ;; (add-to-list 'auto-mode-alist (cons (rx ".tsx" string-end) #'typescript-tsx-mode))
   :config
   (setq typescript-indent-level 2))
+
 
 (defun setup-tide-mode ()
   (interactive)
@@ -1046,6 +1124,36 @@ _f_ flycheck
 (add-hook 'typescript-mode-hook #'evil-smartparens-mode)
 (sp-local-pair 'typescript-mode "{" nil :post-handlers '((my-create-newline-and-enter-sexp "RET")))
 (add-hook 'typescript-mode-hook #'add-node-modules-path)
+
+
+;; orzechovski's typescript/tsx setup
+(use-package coverlay
+  :ensure t
+  :defer t)
+(use-package origami
+  :ensure t
+  :defer t)
+(use-package graphql-mode
+  :ensure t
+  :defer t)
+(use-package tsi
+  ;; :after tree-sitter
+  :ensure t
+  :quelpa (tsi :fetcher github :repo "orzechowskid/tsi.el")
+  ;; define autoload definitions which when actually invoked will cause package to be loaded
+  ;; :commands (tsi-typescript-mode tsi-json-mode tsi-css-mode)
+  ;; :init
+  ;; (add-hook 'typescript-mode-hook (lambda () (tsi-typescript-mode 1)))
+  ;; (add-hook 'json-mode-hook (lambda () (tsi-json-mode 1)))
+  ;; (add-hook 'css-mode-hook (lambda () (tsi-css-mode 1)))
+  ;; (add-hook 'scss-mode-hook (lambda () (tsi-scss-mode 1)))
+  )
+(use-package tsx-mode
+  :ensure t
+  :defer t
+  :quelpa (tsx-mode :fetcher github :repo "orzechowskid/tsx-mode.el")
+  :mode ("\\.tsx\\'" . tsx-mode))
+
 
 (defhydra hydra-typescript (:color red
                                    :hint nil)
@@ -1390,6 +1498,12 @@ _f_ flycheck
 (add-hook 'racket-mode-hook #'smartparens-strict-mode)
 (add-hook 'racket-mode-hook #'evil-cleverparens-mode)
 (add-hook 'racket-mode-hook #'highlight-quoted-mode)
+
+
+;; ======== ESS ========
+(use-package ess
+  :defer t)
+;; (add-to-list 'auto-mode-alist '("\\.r\\'" . php-mode))
 
 
 ;; ======== MAGIT ========
@@ -1873,12 +1987,12 @@ Consider only documented, non-obsolete functions."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
-   '("6a23db7bccf6288fd7c80475dc35804c73f9c9769ad527306d2e0eada1f8b466" "e9460a84d876da407d9e6accf9ceba453e2f86f8b86076f37c08ad155de8223c" "527df6ab42b54d2e5f4eec8b091bd79b2fa9a1da38f5addd297d1c91aa19b616" "16dd114a84d0aeccc5ad6fd64752a11ea2e841e3853234f19dc02a7b91f5d661" "3be1f5387122b935a26e02795196bc90860c57a62940f768f138b02383d9a257" "5a39d2a29906ab273f7900a2ae843e9aa29ed5d205873e1199af4c9ec921aaab" "4486ade2acbf630e78658cd6235a5c6801090c2694469a2a2b4b0e12227a64b9" "dcb9fd142d390bb289fee1d1bb49cb67ab7422cd46baddf11f5c9b7ff756f64c" "28ec8ccf6190f6a73812df9bc91df54ce1d6132f18b4c8fcc85d45298569eb53" "7f6796a9b925f727bbe1781dc65f7f23c0aa4d4dc19613aa3cf96e41a96651e4" "50b66fad333100cc645a27ada899a7b1d44f1ceb32140ab8e88fedabfb7d0daf" "fec6c786b1d3088091715772839ac6051ed972b17991af04b50e9285a98c7463" "8ad35d6c2b35eacc328b732f0a4fe263abd96443a5075aa53b8535a9e8cb7eaf" "9a58c408a001318ce9b4eab64c620c8e8ebd55d4c52327e354f24d298fb6978f" "a9d2ed6e4266ea7f8c1f4a0d1af34a6282ad6ff91754bee5ec7c3b260ec721f4" "293b55c588c56fe062afe4b7a3a4b023712a26d26dc69ee89c347b30283a72eb" "9b59e147dbbde5e638ea1cde5ec0a358d5f269d27bd2b893a0947c4a867e14c1" "a8245b7cc985a0610d71f9852e9f2767ad1b852c2bdea6f4aadc12cce9c4d6d0" "8aebf25556399b58091e533e455dd50a6a9cba958cc4ebb0aab175863c25b9a4" "3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa" default))
+   '("e6f3a4a582ffb5de0471c9b640a5f0212ccf258a987ba421ae2659f1eaa39b09" "6a23db7bccf6288fd7c80475dc35804c73f9c9769ad527306d2e0eada1f8b466" "e9460a84d876da407d9e6accf9ceba453e2f86f8b86076f37c08ad155de8223c" "527df6ab42b54d2e5f4eec8b091bd79b2fa9a1da38f5addd297d1c91aa19b616" "16dd114a84d0aeccc5ad6fd64752a11ea2e841e3853234f19dc02a7b91f5d661" "3be1f5387122b935a26e02795196bc90860c57a62940f768f138b02383d9a257" "5a39d2a29906ab273f7900a2ae843e9aa29ed5d205873e1199af4c9ec921aaab" "4486ade2acbf630e78658cd6235a5c6801090c2694469a2a2b4b0e12227a64b9" "dcb9fd142d390bb289fee1d1bb49cb67ab7422cd46baddf11f5c9b7ff756f64c" "28ec8ccf6190f6a73812df9bc91df54ce1d6132f18b4c8fcc85d45298569eb53" "7f6796a9b925f727bbe1781dc65f7f23c0aa4d4dc19613aa3cf96e41a96651e4" "50b66fad333100cc645a27ada899a7b1d44f1ceb32140ab8e88fedabfb7d0daf" "fec6c786b1d3088091715772839ac6051ed972b17991af04b50e9285a98c7463" "8ad35d6c2b35eacc328b732f0a4fe263abd96443a5075aa53b8535a9e8cb7eaf" "9a58c408a001318ce9b4eab64c620c8e8ebd55d4c52327e354f24d298fb6978f" "a9d2ed6e4266ea7f8c1f4a0d1af34a6282ad6ff91754bee5ec7c3b260ec721f4" "293b55c588c56fe062afe4b7a3a4b023712a26d26dc69ee89c347b30283a72eb" "9b59e147dbbde5e638ea1cde5ec0a358d5f269d27bd2b893a0947c4a867e14c1" "a8245b7cc985a0610d71f9852e9f2767ad1b852c2bdea6f4aadc12cce9c4d6d0" "8aebf25556399b58091e533e455dd50a6a9cba958cc4ebb0aab175863c25b9a4" "3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa" default))
  '(js-indent-level 2)
  '(js2-bounce-indent-p t)
  '(linum-format " %5i ")
  '(package-selected-packages
-   '(dashboard page-break-lines tree-sitter-langs tree-sitter ivy-xref lsp-ui company-lsp flycheck-irony irony-eldoc cmake-ide atom-one-dark-theme atom-dark-theme base16-theme oceanic-theme org-jira web-mode ivy-hydra auto-org-md org-id company-box skewer-mode skewer markdown-mode hydra org-bullets slime magit nord-theme eyebrowse evil-collection solarized-theme evil-magit ac-php company-php php-mode evil-cleverparens evil-smartparens smartparens tide indium js2-mode smart-mode-line sublime-themes counsel general evil))
+   '(quelpa doom-themes dashboard page-break-lines tree-sitter-langs tree-sitter ivy-xref lsp-ui company-lsp flycheck-irony irony-eldoc cmake-ide atom-one-dark-theme atom-dark-theme base16-theme oceanic-theme org-jira web-mode ivy-hydra auto-org-md org-id company-box skewer-mode skewer markdown-mode hydra org-bullets slime magit nord-theme eyebrowse evil-collection solarized-theme evil-magit ac-php company-php php-mode evil-cleverparens evil-smartparens smartparens tide indium js2-mode smart-mode-line sublime-themes counsel general evil))
  '(sp-highlight-pair-overlay nil))
 
 (custom-set-faces
