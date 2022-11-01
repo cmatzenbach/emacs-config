@@ -121,6 +121,16 @@ See the docstrings of `defalias' and `make-obsolete' for more details."
 (setq use-package-always-ensure t)
 ;; TESTING enable imenu support for use-package
 ;; (setq use-package-enable-imenu-support t)
+(unless (package-installed-p 'quelpa)
+  (with-temp-buffer
+    (url-insert-file-contents "https://raw.githubusercontent.com/quelpa/quelpa/master/quelpa.el")
+    (eval-buffer)
+    (quelpa-self-upgrade)))
+(quelpa
+ '(quelpa-use-package
+   :fetcher git
+   :url "https://github.com/quelpa/quelpa-use-package.git"))
+(require 'quelpa-use-package)
 
 (unless (package-installed-p 'quelpa)
   (with-temp-buffer
@@ -729,6 +739,7 @@ _SPC_ cancel	_o_nly this   	_d_elete
 ;;   (setf (alist-get 'typescript-tsx-mode tree-sitter-major-mode-language-alist) 'tsx))
 (use-package tree-sitter
   :ensure t
+  :hook (typescript-mode . tree-sitter-hl-mode)
   :config
   (global-tree-sitter-mode)
   (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
@@ -1052,6 +1063,7 @@ _f_ flycheck
   (setq typescript-indent-level 2))
 ;; (require 'tsi-typescript)
 
+
 (defun setup-tide-mode ()
   (interactive)
   (tide-setup)
@@ -1147,6 +1159,36 @@ _f_ flycheck
   ;; ("v" tide-verify-setup :exit t)
   ("i" lsp-organize-imports :exit t)
   )
+
+
+;; orzechovski's typescript/tsx setup
+(use-package coverlay
+  :ensure t
+  :defer t)
+(use-package origami
+  :ensure t
+  :defer t)
+(use-package graphql-mode
+  :ensure t
+  :defer t)
+(use-package tsi
+  ;; :after tree-sitter
+  :ensure t
+  :quelpa (tsi :fetcher github :repo "orzechowskid/tsi.el")
+  ;; define autoload definitions which when actually invoked will cause package to be loaded
+  ;; :commands (tsi-typescript-mode tsi-json-mode tsi-css-mode)
+  ;; :init
+  ;; (add-hook 'typescript-mode-hook (lambda () (tsi-typescript-mode 1)))
+  ;; (add-hook 'json-mode-hook (lambda () (tsi-json-mode 1)))
+  ;; (add-hook 'css-mode-hook (lambda () (tsi-css-mode 1)))
+  ;; (add-hook 'scss-mode-hook (lambda () (tsi-scss-mode 1)))
+  )
+(use-package tsx-mode
+  :ensure t
+  :defer t
+  :quelpa (tsx-mode :fetcher github :repo "orzechowskid/tsx-mode.el")
+  :mode ("\\.tsx\\'" . tsx-mode))
+
 
 (defhydra hydra-typescript (:color red
                                    :hint nil)
@@ -1507,6 +1549,12 @@ _f_ flycheck
 (add-hook 'racket-mode-hook #'smartparens-strict-mode)
 (add-hook 'racket-mode-hook #'evil-cleverparens-mode)
 (add-hook 'racket-mode-hook #'highlight-quoted-mode)
+
+
+;; ======== ESS ========
+(use-package ess
+  :defer t)
+;; (add-to-list 'auto-mode-alist '("\\.r\\'" . php-mode))
 
 
 ;; ======== MAGIT ========
@@ -1993,12 +2041,12 @@ Consider only documented, non-obsolete functions."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
-   '("a0be7a38e2de974d1598cf247f607d5c1841dbcef1ccd97cded8bea95a7c7639" "835868dcd17131ba8b9619d14c67c127aa18b90a82438c8613586331129dda63" "e6f3a4a582ffb5de0471c9b640a5f0212ccf258a987ba421ae2659f1eaa39b09" "6a23db7bccf6288fd7c80475dc35804c73f9c9769ad527306d2e0eada1f8b466" "e9460a84d876da407d9e6accf9ceba453e2f86f8b86076f37c08ad155de8223c" "527df6ab42b54d2e5f4eec8b091bd79b2fa9a1da38f5addd297d1c91aa19b616" "16dd114a84d0aeccc5ad6fd64752a11ea2e841e3853234f19dc02a7b91f5d661" "3be1f5387122b935a26e02795196bc90860c57a62940f768f138b02383d9a257" "5a39d2a29906ab273f7900a2ae843e9aa29ed5d205873e1199af4c9ec921aaab" "4486ade2acbf630e78658cd6235a5c6801090c2694469a2a2b4b0e12227a64b9" "dcb9fd142d390bb289fee1d1bb49cb67ab7422cd46baddf11f5c9b7ff756f64c" "28ec8ccf6190f6a73812df9bc91df54ce1d6132f18b4c8fcc85d45298569eb53" "7f6796a9b925f727bbe1781dc65f7f23c0aa4d4dc19613aa3cf96e41a96651e4" "50b66fad333100cc645a27ada899a7b1d44f1ceb32140ab8e88fedabfb7d0daf" "fec6c786b1d3088091715772839ac6051ed972b17991af04b50e9285a98c7463" "8ad35d6c2b35eacc328b732f0a4fe263abd96443a5075aa53b8535a9e8cb7eaf" "9a58c408a001318ce9b4eab64c620c8e8ebd55d4c52327e354f24d298fb6978f" "a9d2ed6e4266ea7f8c1f4a0d1af34a6282ad6ff91754bee5ec7c3b260ec721f4" "293b55c588c56fe062afe4b7a3a4b023712a26d26dc69ee89c347b30283a72eb" "9b59e147dbbde5e638ea1cde5ec0a358d5f269d27bd2b893a0947c4a867e14c1" "a8245b7cc985a0610d71f9852e9f2767ad1b852c2bdea6f4aadc12cce9c4d6d0" "8aebf25556399b58091e533e455dd50a6a9cba958cc4ebb0aab175863c25b9a4" "3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa" default))
+   '("e6f3a4a582ffb5de0471c9b640a5f0212ccf258a987ba421ae2659f1eaa39b09" "6a23db7bccf6288fd7c80475dc35804c73f9c9769ad527306d2e0eada1f8b466" "e9460a84d876da407d9e6accf9ceba453e2f86f8b86076f37c08ad155de8223c" "527df6ab42b54d2e5f4eec8b091bd79b2fa9a1da38f5addd297d1c91aa19b616" "16dd114a84d0aeccc5ad6fd64752a11ea2e841e3853234f19dc02a7b91f5d661" "3be1f5387122b935a26e02795196bc90860c57a62940f768f138b02383d9a257" "5a39d2a29906ab273f7900a2ae843e9aa29ed5d205873e1199af4c9ec921aaab" "4486ade2acbf630e78658cd6235a5c6801090c2694469a2a2b4b0e12227a64b9" "dcb9fd142d390bb289fee1d1bb49cb67ab7422cd46baddf11f5c9b7ff756f64c" "28ec8ccf6190f6a73812df9bc91df54ce1d6132f18b4c8fcc85d45298569eb53" "7f6796a9b925f727bbe1781dc65f7f23c0aa4d4dc19613aa3cf96e41a96651e4" "50b66fad333100cc645a27ada899a7b1d44f1ceb32140ab8e88fedabfb7d0daf" "fec6c786b1d3088091715772839ac6051ed972b17991af04b50e9285a98c7463" "8ad35d6c2b35eacc328b732f0a4fe263abd96443a5075aa53b8535a9e8cb7eaf" "9a58c408a001318ce9b4eab64c620c8e8ebd55d4c52327e354f24d298fb6978f" "a9d2ed6e4266ea7f8c1f4a0d1af34a6282ad6ff91754bee5ec7c3b260ec721f4" "293b55c588c56fe062afe4b7a3a4b023712a26d26dc69ee89c347b30283a72eb" "9b59e147dbbde5e638ea1cde5ec0a358d5f269d27bd2b893a0947c4a867e14c1" "a8245b7cc985a0610d71f9852e9f2767ad1b852c2bdea6f4aadc12cce9c4d6d0" "8aebf25556399b58091e533e455dd50a6a9cba958cc4ebb0aab175863c25b9a4" "3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa" default))
  '(js-indent-level 2)
  '(js2-bounce-indent-p t)
  '(linum-format " %5i ")
  '(package-selected-packages
-   '(doom-themes dashboard page-break-lines tree-sitter-langs tree-sitter ivy-xref lsp-ui company-lsp flycheck-irony irony-eldoc cmake-ide atom-one-dark-theme atom-dark-theme base16-theme oceanic-theme org-jira web-mode ivy-hydra auto-org-md org-id company-box skewer-mode skewer markdown-mode hydra org-bullets slime magit nord-theme eyebrowse evil-collection solarized-theme evil-magit ac-php company-php php-mode evil-cleverparens evil-smartparens smartparens tide indium js2-mode smart-mode-line sublime-themes counsel general evil))
+   '(quelpa doom-themes dashboard page-break-lines tree-sitter-langs tree-sitter ivy-xref lsp-ui company-lsp flycheck-irony irony-eldoc cmake-ide atom-one-dark-theme atom-dark-theme base16-theme oceanic-theme org-jira web-mode ivy-hydra auto-org-md org-id company-box skewer-mode skewer markdown-mode hydra org-bullets slime magit nord-theme eyebrowse evil-collection solarized-theme evil-magit ac-php company-php php-mode evil-cleverparens evil-smartparens smartparens tide indium js2-mode smart-mode-line sublime-themes counsel general evil))
  '(sp-highlight-pair-overlay nil))
 
 (custom-set-faces
