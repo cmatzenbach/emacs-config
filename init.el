@@ -63,25 +63,24 @@ See the docstrings of `defalias' and `make-obsolete' for more details."
 (setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto-save-list/" t))) ;; transform backups file name
 (setq inhibit-startup-screen t)	;; inhibit useless and old-school startup screen
 (setq ring-bell-function 'ignore)	;; silent bell when you make a mistake
-(setq coding-system-for-read 'utf-8)	;; use utf-8 by default
-(setq coding-system-for-write 'utf-8 )
-(setq sentence-end-double-space nil)	; sentence SHOULD end with only a point.
-(setq fill-column 80)		; toggle wrapping text at the 80th character
-(menu-bar-mode -1)                      ; disable menu bar
-(setq initial-scratch-message "Welcome to Emacs") ; print a default message in the empty scratch buffer opened at startup
+(setq coding-system-for-read 'utf-8)	;; use utf-8 by default(setq coding-system-for-write 'utf-8 )
+(setq sentence-end-double-space nil)  ;; sentence SHOULD end with only a point.
+(setq fill-column 80)  ;; toggle wrapping text at the 80th character
+(menu-bar-mode -1) ;; disable menu bar
+(setq initial-scratch-message "Welcome to Emacs") ;; print a default message in the empty scratch buffer opened at startup
 (setq user-full-name "Chris Matzenbach"
-      user-mail-address "cmatzenbach@gmail.com")
+      user-mail-address "matzy@proton.me")
 (global-linum-mode 1)
 (scroll-bar-mode -1)
 (tool-bar-mode -1)
-(setq-default indent-tabs-mode nil)     ; use spaces instead of tabs
+(setq-default indent-tabs-mode nil)  ;; use spaces instead of tabs
 (setq-default tab-width 2)
 ;; avoid having to answer "yes" and "no" every time - change to "y" and "n"
 (defalias 'yes-or-no-p 'y-or-n-p)
 ;; keep fringes clean
 (setq-default indicate-empty-lines nil)
 ;; no more ugly line splitting
-                                        ;(setq-default truncate-lines t)
+;;(setq-default truncate-lines t)
 ;; For MacOS - Add these to the PATH so that proper executables are found
 (setenv "PATH" (concat (getenv "PATH") ":/usr/texbin"))
 (setenv "PATH" (concat (getenv "PATH") ":/usr/bin"))
@@ -133,6 +132,17 @@ See the docstrings of `defalias' and `make-obsolete' for more details."
    :url "https://github.com/quelpa/quelpa-use-package.git"))
 (require 'quelpa-use-package)
 
+(unless (package-installed-p 'quelpa)
+  (with-temp-buffer
+    (url-insert-file-contents "https://raw.githubusercontent.com/quelpa/quelpa/master/quelpa.el")
+    (eval-buffer)
+    (quelpa-self-upgrade)))
+(quelpa
+ '(quelpa-use-package
+   :fetcher git
+   :url "https://github.com/quelpa/quelpa-use-package.git"))
+(require 'quelpa-use-package)
+
 
 ;; ======== LOCAL CONFIG FILES ========
 (defconst user-config-dir "~/.emacs.d/config/")
@@ -163,6 +173,8 @@ See the docstrings of `defalias' and `make-obsolete' for more details."
 
 
 ;; ======== RANDOM/GENERAL PACKAGES ========
+(use-package sudo-edit
+  :ensure t)
 (use-package page-break-lines)
 ;; customized starting page dashboard
 (use-package dashboard
@@ -208,17 +220,20 @@ See the docstrings of `defalias' and `make-obsolete' for more details."
 
 ;; ======== EVIL MODE ========
 (use-package evil
+  :ensure t
   :diminish evil-mode
   :init
   (setq evil-want-C-u-scroll t)
-  (setq evil-want-integration nil)
+  (setq evil-want-integration t)
   (setq evil-want-keybinding nil)
+  (setq evil-undo-system 'undo-tree)
   :config
   (evil-mode 1))
 
 ;; evil-collection - WIP package to create evil keybindings for missing modes
 (use-package evil-collection
   :after evil
+  :ensure t
   :config
   (evil-collection-init))
 
@@ -252,16 +267,18 @@ See the docstrings of `defalias' and `make-obsolete' for more details."
 ;; set c-u to have vim-like behavior (scroll up half page)
 (define-key evil-normal-state-map (kbd "C-u") 'evil-scroll-up)
 (define-key evil-visual-state-map (kbd "C-u") 'evil-scroll-up)
-(define-key evil-insert-state-map (kbd "C-u")
-  (lambda ()
-    (interactive)
-    (evil-delete (point-at-bol) (point))))
+;; (define-key evil-insert-state-map (kbd "C-u")
+;;   (lambda ()
+;;     (interactive)
+;;     (evil-delete (point-at-bol) (point))))
 
 ;; map fd to escape normal mode
-(use-package key-chord) 
-(key-chord-mode 1) 
-(key-chord-define-global "fd" 'evil-normal-state) 
-
+(use-package key-chord
+  :ensure t
+  :config
+  (key-chord-mode 1)
+  (key-chord-define-global "fd" 'evil-normal-state)) 
+ 
 (use-package evil-surround
   :config
   (global-evil-surround-mode))
@@ -285,8 +302,8 @@ See the docstrings of `defalias' and `make-obsolete' for more details."
   (editorconfig-mode 1))
 
 ;; rainbow delimiters, a godsend for lisps and shitty es5 callback stacks from hell
-(use-package rainbow-delimiters)
-(add-hook 'prog-mode-hook #'rainbow-delimiters-mode)
+(use-package rainbow-delimiters
+  :hook (prog-mode . rainbow-delimiters-mode))
 
 ;; ======== SUBLIMITY ========
 (use-package sublimity)
@@ -372,20 +389,6 @@ _SPC_ cancel	_o_nly this   	_d_elete
 (use-package avy
   :config
   (avy-setup-default))
-
-;; ======== TARGETS.EL ========
-;; (use-package targets
-;;   :load-path "~/.emacs.d/local-packages/targets.el"
-;;   :init
-;;   (setq targets-user-text-objects '((pipe "|" nil separator)
-;;                                     (paren "(" ")" pair :more-keys "b")
-;;                                     (bracket "[" "]" pair :more-keys "r")
-;;                                     (curly "{" "}" pair :more-keys "c")))
-;;   :config
-;;   (targets-setup t
-;;                  :inside-key "i"
-;;                  :around-key "a"
-;;                  :remote-key nil))
 
 
 ;; ======== WHICH-KEY && GENERAL ========
@@ -528,7 +531,7 @@ _SPC_ cancel	_o_nly this   	_d_elete
   :config
   (setq company-tooltip-align-annotations t
         company-minimum-prefix-length 2
-        company-idle-delay 0.1))
+        company-idle-delay 0.0))
 
 ;; trigger company anytime in insert mode with C-l
 (define-key evil-insert-state-map (kbd "C-l") #'company-complete)
@@ -543,8 +546,8 @@ _SPC_ cancel	_o_nly this   	_d_elete
   (define-key company-active-map (kbd "C-l") #'company-complete))
 
 ;; Company Box (pretty front-end with icons)
-;; (use-package company-box
-;;   :hook (company-mode . company-box-mode))
+(use-package company-box
+  :hook (company-mode . company-box-mode))
 ;; (add-to-list 'load-path "~/.local/share/icons-in-terminal/icons-in-terminal.el")
 ;; (setq company-box-icons-unknown 'fa_question_circle)
 
@@ -638,28 +641,8 @@ _SPC_ cancel	_o_nly this   	_d_elete
   ("G"  (progn (goto-char (point-max)) (flycheck-previous-error)) "Last")
   ("q"  nil))
 
-;; ======== GGTAGS ========
-;(use-package ggtags)
-;(add-hook 'c-mode-common-hook
-;	  (lambda ()
-;	    (when (derived-mode-p 'c-mode 'c++-mode 'java-mode 'asm-mode)
-;	      (ggtags-mode 1))))
 
-
-;; ======== COUNSEL GTAGS ========
-;; (use-package counsel-gtags)
-;; ;; (add-hook 'c-mode-hook 'counsel-gtags-mode)
-;; ;; (add-hook 'c++-mode-hook 'counsel-gtags-mode)
-;; (add-hook 'flycheck-mode-hook 'counsel-gtags-mode)
-
-;; (with-eval-after-load 'counsel-gtags
-;;   (define-key counsel-gtags-mode-map (kbd "M-t") 'counsel-gtags-find-definition)
-;;   (define-key counsel-gtags-mode-map (kbd "M-r") 'counsel-gtags-find-reference)
-;;   (define-key counsel-gtags-mode-map (kbd "M-s") 'counsel-gtags-find-symbol)
-;;   (define-key counsel-gtags-mode-map (kbd "M-,") 'counsel-gtags-go-backward))
-
-
-;; ======== SPACELINE =========
+;; ======== ALL-THE-ICONS =========
 (use-package all-the-icons)
 ;; fix for lag on windows when using all-the-icons
 (when (string-equal system-type "windows-nt") (setq inhibit-compacting-font-caches t))
@@ -669,75 +652,12 @@ _SPC_ cancel	_o_nly this   	_d_elete
                                         ;  :after spaceline
                                         ;  :config (spaceline-all-the-icons-theme))
                                         ;(setq spaceline-all-the-icons-separator-type 'arrow) 
-(use-package powerline
+
+
+;; ======== DOOM MODELINE ========
+(use-package doom-modeline
   :ensure t
-  :config
-
-  (defun make-rect (color height width)
-    "Create an XPM bitmap."
-    (when window-system
-      (propertize
-       " " 'display
-       (let ((data nil)
-             (i 0))
-         (setq data (make-list height (make-list width 1)))
-         (pl/make-xpm "percent" color color (reverse data))))))
-
-
-  (defun powerline-mode-icon ()
-    (let ((icon (all-the-icons-icon-for-buffer)))
-      (unless (symbolp icon) ;; This implies it's the major mode
-        (format " %s"
-                (propertize icon
-                            'help-echo (format "Major-mode: `%s`" major-mode)
-                            'face `(:height 1.2 :family ,(all-the-icons-icon-family-for-buffer)))))))
-
-
-  (setq-default mode-line-format 
-                '("%e"
-                  (:eval
-                   (let* ((active (powerline-selected-window-active))
-                          (modified (buffer-modified-p))
-                          (face1 (if active 'powerline-active1 'powerline-inactive1))
-                          (face2 (if active 'powerline-active2 'powerline-inactive2))
-                          (bar-color (cond ((and active modified) (face-foreground 'error))
-                                           (active (face-background 'cursor))
-                                           (t (face-background 'tooltip))))
-                          (lhs (list
-                                (make-rect bar-color 30 3)
-                                (when modified
-                                  (concat
-                                   " "
-                                   (all-the-icons-faicon "floppy-o"
-                                                         :face (when active 'error)
-                                                         :v-adjust -0.01)))
-                                " "
-                                (powerline-buffer-id)
-                                ))
-                          (center (list
-                                   " "
-                                   (powerline-mode-icon)
-                                   " "
-                                   (powerline-major-mode)
-                                   " "))
-                          (rhs (list
-                                (format "%s" (eyebrowse--get 'current-slot))
-                                " | "
-                                (powerline-raw "%l:%c" 'face1 'r)
-                                " | "
-                                (powerline-raw "%6p" 'face1 'r)
-                                (powerline-hud 'highlight 'region 1)
-                                " "
-                                ))
-                          )
-                     (concat
-                      (powerline-render lhs)
-                      ;; changed bg color - variables changed from face1/face2 to bar-color 
-                      (powerline-fill-center bar-color (/ (powerline-width center) 1.0)) ;;changed from 2.0 - seems to center better on yoga3
-                      (powerline-render center)
-                      (powerline-fill bar-color (powerline-width rhs))
-                      (powerline-render rhs))))))
-  )
+  :init (doom-modeline-mode 1))
 
 
 ;; ======== PROJECTILE ========
@@ -769,26 +689,70 @@ _SPC_ cancel	_o_nly this   	_d_elete
 
 (use-package lsp-ui
   :ensure t
+  :after lsp-mode
+  :hook (lsp-mode . lsp-ui-mode)
+  :commands lsp-ui-doc-hide
+  :bind (:map lsp-ui-mode-map
+              ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
+              ([remap xref-find-references] . lsp-ui-peek-find-references)
+              ("C-c u" . lsp-ui-imenu))
+:init (setq lsp-ui-doc-enable t
+         lsp-ui-doc-use-webkit nil
+         lsp-ui-doc-header nil
+         lsp-ui-doc-delay 0.0
+         lsp-ui-doc-include-signature t
+         lsp-ui-doc-alignment 'frame
+         ;; lsp-ui-doc-use-childframe nil
+         ;; lsp-ui-doc-border (face-foreground 'default)
+         lsp-ui-peek-enable t
+         lsp-ui-peek-show-directory t
+         lsp-ui-sideline-update-mode 'line
+         lsp-ui-sideline-enable t
+         lsp-ui-sideline-show-code-actions t
+         lsp-ui-sideline-show-hover nil
+         lsp-ui-sideline-ignore-duplicate t)
   :config
-  (define-key lsp-ui-mode-map [remap xref-find-definitions] #'lsp-ui-peek-find-definitions)
-  (define-key lsp-ui-mode-map [remap xref-find-references] #'lsp-ui-peek-find-references)
-  (lsp-ui-peek-jump-backward)
-  (lsp-ui-peek-jump-forward))
+  ;; (lsp-ui-peek-jump-backward)
+  ;; (lsp-ui-peek-jump-forward)
+  ;; (add-to-list 'lsp-ui-doc-frame-parameters '(right-fringe . 8))
+
+  ;; `C-g'to close doc
+  (advice-add #'keyboard-quit :before #'lsp-ui-doc-hide)
+
+  ;; Reset `lsp-ui-doc-background' after loading theme
+  (add-hook 'after-load-theme-hook
+       (lambda ()
+         (setq lsp-ui-doc-border (face-foreground 'default))
+         (set-face-background 'lsp-ui-doc-background
+                              (face-background 'tooltip))))
+
+  ;; WORKAROUND Hide mode-line of the lsp-ui-imenu buffer
+  ;; @see https://github.com/emacs-lsp/lsp-ui/issues/243
+  (defadvice lsp-ui-imenu (after hide-lsp-ui-imenu-mode-line activate)
+    (setq mode-line-format nil)))
 
 
 ;; ======== TREE-SITTER ========
+;; (use-package tree-sitter
+;;   :hook (typescript-mode . tree-sitter-hl-mode)
+;;   :config
+;;   (setf (alist-get 'typescript-tsx-mode tree-sitter-major-mode-language-alist) 'tsx))
 (use-package tree-sitter
   :ensure t
   :hook (typescript-mode . tree-sitter-hl-mode)
   :config
   (global-tree-sitter-mode)
   (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
-  ;; (setf (alist-get 'typescript-tsx-mode tree-sitter-major-mode-language-alist) 'tsx)
   )
 
 (use-package tree-sitter-langs
   :ensure t
   :after tree-sitter)
+(with-eval-after-load 'tree-sitter-langs
+  (tree-sitter-require 'tsx)
+  (add-to-list 'tree-sitter-major-mode-language-alist '(typescript-mode . tsx))
+  (tree-sitter-require 'json)
+  (add-to-list 'tree-sitter-major-mode-language-alist '(bbjson-mode . json)))
 
 
 ;; ======== C-MODE ========
@@ -1085,13 +1049,19 @@ _f_ flycheck
 
 
 ;; ======== TYPESCRIPT ========
+;; (use-package typescript-mode
+;;   :mode (rx ".ts" string-end)
+;;   :init
+;;   (define-derived-mode typescript-tsx-mode typescript-mode "typescript-tsx")
+;;   (add-to-list 'auto-mode-alist (cons (rx ".tsx" string-end) #'typescript-tsx-mode))
+;;   :config
+;;   (setq typescript-indent-level 2))
 (use-package typescript-mode
-  :mode (rx ".ts" string-end)
-  :init
-  ;; (define-derived-mode typescript-tsx-mode typescript-mode "typescript-tsx")
-  ;; (add-to-list 'auto-mode-alist (cons (rx ".tsx" string-end) #'typescript-tsx-mode))
+  :defer t
+  :hook (typescript-mode . lsp-deferred)
   :config
   (setq typescript-indent-level 2))
+;; (require 'tsi-typescript)
 
 
 (defun setup-tide-mode ()
@@ -1103,15 +1073,27 @@ _f_ flycheck
   (tide-hl-identifier-mode +1)
   (company-mode +1)) 
 
+
 (use-package tide
   :config
   (setq company-tooltip-align-annotations t)
   (setq tide-completion-detailed t)
   ;; (add-hook 'before-save-hook 'tide-format-before-save)
-  (add-hook 'typescript-mode-hook #'setup-tide-mode)
+  ;; (add-hook 'typescript-mode-hook #'setup-tide-mode)
   (add-hook 'rjsx-mode-hook #'setup-tide-mode)
   (add-hook 'js2-mode-hook #'setup-tide-mode)
-  (add-to-list 'company-backends 'company-tide))
+  (add-to-list 'company-backends 'company-tide)
+  )
+
+;; (add-hook
+;;  'typescript-mode-hook
+;;  (lambda ()
+;;    (setup-tide-mode)
+;;    (tree-sitter-mode)
+;;    (tree-sitter-hl-mode)
+;;    (tsi-typescript-mode)))
+(push '("\\.js[x]?\\'" . typescript-mode) auto-mode-alist)
+(push '("\\.ts[x]?\\'" . typescript-mode) auto-mode-alist)
 
 ;; typescript lsp (slow and not as many features as javascript-typescript-langserver)
 ;; (require 'lsp-typescript)
@@ -1120,10 +1102,63 @@ _f_ flycheck
 ;;   (add-hook 'typescript-mode-hook #'lsp-typescript-enable)
 
 ;; ;; configure smartparens
-(add-hook 'typescript-mode-hook #'smartparens-mode)
-(add-hook 'typescript-mode-hook #'evil-smartparens-mode)
-(sp-local-pair 'typescript-mode "{" nil :post-handlers '((my-create-newline-and-enter-sexp "RET")))
-(add-hook 'typescript-mode-hook #'add-node-modules-path)
+;; (add-hook 'typescript-mode-hook #'smartparens-mode)
+;; (add-hook 'typescript-mode-hook #'evil-smartparens-mode)
+;; (sp-local-pair 'typescript-mode "{" nil :post-handlers '((my-create-newline-and-enter-sexp "RET")))
+;; (add-hook 'typescript-mode-hook #'add-node-modules-path)
+
+(use-package coverlay
+  :ensure t
+  :defer t)
+(use-package origami
+  :ensure t
+  :defer t)
+(use-package graphql-mode
+  :ensure t
+  :defer t)
+(use-package tsi
+  :after tree-sitter
+  :ensure t
+  :quelpa (tsi :fetcher github :repo "orzechowskid/tsi.el")
+  ;; define autoload definitions which when actually invoked will cause package to be loaded
+  :commands (tsi-typescript-mode tsi-json-mode tsi-css-mode)
+  :init
+  (add-hook 'typescript-mode-hook (lambda () (tsi-typescript-mode 1)))
+  (add-hook 'json-mode-hook (lambda () (tsi-json-mode 1)))
+  (add-hook 'css-mode-hook (lambda () (tsi-css-mode 1)))
+  (add-hook 'scss-mode-hook (lambda () (tsi-scss-mode 1)))
+  )
+(use-package tsx-mode
+  :ensure t
+  :defer t
+  :quelpa (tsx-mode :fetcher github :repo "orzechowskid/tsx-mode.el")
+  :mode
+  ("\\.tsx\\'" . tsx-mode)
+  ("\\.jsx\\'" . tsx-mode))
+
+(defhydra hydra-lsp-typescript (:color red
+                                   :hint nil)
+  "
+  ^Buffer^                 ^Errors^                   ^Refactor^                   ^Format^                 ^LSP^
+------------------------------------------------------------------------------------------------------------------------------------
+[_d_]   Documentation      [_e_] Errors              [_rs_]  Rename symbol         [_p_]  Prettier format    [_*_]  Restart server
+[_fd_]  Find definition                              [_rf_]  Refactor              
+[_fr_]  Find references                                                                                [_i_]  Organize imports 
+"
+  ("d" lsp-ui-doc-show :exit t)
+  ("fd" lsp-ui-peek-find-definitions :exit t)
+  ("fr" lsp-ui-peek-find-references :exit t)
+  ;; ("c" tide-jsdoc-template :exit t)
+  ("e" flycheck-list-errors :exit t)
+  ;; ("a" tide-fix :exit t)
+  ;; ("rj" hydra-js2-refactor/body :exit t)
+  ("rs" lsp-rename :exit t)
+  ("rf" lsp-modeline-code-actions-mode :exit t)
+  ("p" prettier-prettify :exit t)
+  ("*" lsp-workspace-restart :exit t)
+  ;; ("v" tide-verify-setup :exit t)
+  ("i" lsp-organize-imports :exit t)
+  )
 
 
 ;; orzechovski's typescript/tsx setup
@@ -1162,7 +1197,7 @@ _f_ flycheck
 ------------------------------------------------------------------------------------------------------------------------------------
 [_d_]   Documentation      [_e_] Errors              [_rs_]  Rename symbol         [_t_]  Tide format       [_*_]  Restart server
 [_fd_]  Find definition    [_a_] Apply error fix     [_rf_]  Refactor              [_c_]  JSDoc comment     [_v_]  Verify setup
-[_fr_]  Find references                                                                               [_i_]  Organize imports 
+[_fr_]  Find references                            [_rj_]  js2-refactor                                 [_i_]  Organize imports 
 "
   ("d" tide-documentation-at-point :exit t)
   ("fd" tide-jump-to-definition :exit t)
@@ -1170,6 +1205,7 @@ _f_ flycheck
   ("c" tide-jsdoc-template :exit t)
   ("e" tide-project-errors :exit t)
   ("a" tide-fix :exit t)
+  ("rj" hydra-js2-refactor/body :exit t)
   ("rs" tide-rename-symbol :exit t)
   ("rf" tide-refactor :exit t)
   ("t" tide-format :exit t)
@@ -1212,7 +1248,7 @@ _f_ flycheck
 ------------------------------------------------------------------------------------------------------------------------------------
 [_d_]   Documentation      [_e_] Flycheck            [_rs_]  Rename symbol         [_t_]  Tide format       [_*_]  Restart server
 [_fd_]  Find definition    [_a_] Apply error fix     [_rf_]  Refactor              [_c_]  JSDoc comment     [_v_]  Verify setup
-[_fr_]  Find references                            [_rj_]  js2-refactor                                 [_i_]  Organize imports 
+[_fr_]  Find references                              [_rj_]  js2-refactor                                   [_i_]  Organize imports 
 "
   ("d" tide-documentation-at-point :exit t)
   ("fd" tide-jump-to-definition :exit t)
@@ -1228,6 +1264,21 @@ _f_ flycheck
   ("v" tide-verify-setup :exit t)
   ("i" tide-organize-imports :exit t)
   )
+
+
+;; ======== PRETTIER ========
+(use-package prettier
+  :ensure t
+  :defer t
+  :hook
+  (js-mode . prettier-mode)
+  (typescript-mode . prettier-mode)
+  (tsi-typescript-mode . prettier-mode)
+  (tsi-json-mode . prettier-mode)
+  (tsi-css-mode . prettier-mode)
+  (tsi-scss-mode . prettier-mode)
+  (tsx-mode . prettier-mode))
+
 
 ;; ======== JSON ========
 (use-package json-mode
@@ -1534,7 +1585,8 @@ _f_ flycheck
   (progn
     (global-undo-tree-mode)
     (setq undo-tree-visualizer-timestamps t)
-    (setq undo-tree-visualizer-diff t)))
+    (setq undo-tree-visualizer-diff t)
+    (setq undo-tree-auto-save-history nil)))
 
 
 ;; ======== MARKDOWN ========
@@ -1846,7 +1898,9 @@ _vr_ reset      ^^                       ^^                 ^^
     (js2-mode
      (hydra-javascript/body))
     (typescript-mode
-     (hydra-typescript/body))
+     (hydra-lsp-typescript/body))
+    (tsx-mode
+     (hydra-lsp-typescript/body))
     (rjsx-mode
      (hydra-react/body))
     (markdown-mode

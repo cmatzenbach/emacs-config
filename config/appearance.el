@@ -31,7 +31,7 @@
                     :width 'normal)))
  ((string-equal system-type "gnu/linux")
   (progn
-    (load-theme 'gruvbox t)
+    (load-theme 'doom-spacegrey t)
     (set-face-attribute 'default nil
                         :family "Hack"
                         :height 116
