@@ -392,8 +392,11 @@ _SPC_ cancel	_o_nly this   	_d_elete
 
 
 ;; ======== WHICH-KEY && GENERAL ========
-(use-package which-key :config (which-key-mode 1))
+(use-package which-key
+  :ensure t
+  :config (which-key-mode 1))
 (setq which-key-idle-delay 0.3) 
+
 (use-package general)
 
 (general-define-key
@@ -425,6 +428,7 @@ _SPC_ cancel	_o_nly this   	_d_elete
  "bb" 'ivy-switch-buffer
  "bd" 'kill-this-buffer
  "bD" 'kill-buffer-and-window
+ "bm" 'hydra-buffer-menu/body
  "bn" 'next-buffer
  "bp" 'previous-buffer
 
@@ -432,6 +436,8 @@ _SPC_ cancel	_o_nly this   	_d_elete
  "e" '(:ignore t :which-key "Elisp")
  "eb" 'eval-buffer
  "er" 'eval-region
+ "ef" 'hydra-flycheck/body
+ "es" 'symex-mode-interface
 
  ;; files
  "f" '(:ignore t :which-key "Files")
@@ -451,6 +457,7 @@ _SPC_ cancel	_o_nly this   	_d_elete
 
  ;; help
  "h" '(:ignore t :which-key "Help")
+ "ha" 'hydra-apropos/body
  "hc" 'helpful-command
  "hf" 'helpful-callable
  "hk" 'helpful-describe-key
@@ -508,12 +515,12 @@ _SPC_ cancel	_o_nly this   	_d_elete
 
  ;; windows
  "w" '(:ignore t :which-key "Windows")
- "wa" 'hydra-window/body
  "wd" 'evil-window-delete
  "wh" 'evil-window-left
  "wj" 'evil-window-down
  "wk" 'evil-window-up
  "wl" 'evil-window-right
+ "wm" 'hydra-window/body
  "wr" 'rotate-windows
  "w/" 'evil-window-vsplit
  "w-" 'evil-window-split
@@ -522,7 +529,56 @@ _SPC_ cancel	_o_nly this   	_d_elete
 
 ;; ======== HYDRA ========
 (use-package hydra
+  :ensure t
   :defer t)
+
+
+;; ======== GENERAL HYDRAS ========
+(defhydra hydra-buffer-menu (:color pink
+                             :hint nil)
+  "
+^Mark^             ^Unmark^           ^Actions^          ^Search
+^^^^^^^^-----------------------------------------------------------------                        (__)
+_m_: mark          _u_: unmark        _x_: execute       _R_: re-isearch                         (oo)
+_s_: save          _U_: unmark up     _b_: bury          _I_: isearch                      /------\\/
+_d_: delete        ^ ^                _g_: refresh       _O_: multi-occur                 / |    ||
+_D_: delete up     ^ ^                _T_: files only: % -28`Buffer-menu-files-only^^    *  /\\---/\\
+_~_: modified      ^ ^                ^ ^                ^^                                 ~~   ~~
+"
+  ("m" Buffer-menu-mark)
+  ("u" Buffer-menu-unmark)
+  ("U" Buffer-menu-backup-unmark)
+  ("d" Buffer-menu-delete)
+  ("D" Buffer-menu-delete-backwards)
+  ("s" Buffer-menu-save)
+  ("~" Buffer-menu-not-modified)
+  ("x" Buffer-menu-execute)
+  ("b" Buffer-menu-bury)
+  ("g" revert-buffer)
+  ("T" Buffer-menu-toggle-files-only)
+  ("O" Buffer-menu-multi-occur :color blue)
+  ("I" Buffer-menu-isearch-buffers :color blue)
+  ("R" Buffer-menu-isearch-buffers-regexp :color blue)
+  ("c" nil "cancel")
+  ("v" Buffer-menu-select "select" :color blue)
+  ("o" Buffer-menu-other-window "other-window" :color blue)
+  ("q" quit-window "quit" :color blue))
+
+(defhydra hydra-apropos (:color blue
+                         :hint nil)
+  "
+_a_propos        _c_ommand
+_d_ocumentation  _l_ibrary
+_v_ariable       _u_ser-option
+^ ^          valu_e_"
+  ("a" apropos)
+  ("d" apropos-documentation)
+  ("v" apropos-variable)
+  ("c" apropos-command)
+  ("l" apropos-library)
+  ("u" apropos-user-option)
+  ("e" apropos-value))
+
 
 ;; ======== COMPANY ========
 (use-package company
@@ -1397,6 +1453,18 @@ _f_ flycheck
     (add-hook 'lisp-interaction-mode-hook 'turn-on-eldoc-mode)
     (add-hook 'ielm-mode-hook 'turn-on-eldoc-mode)))
 
+(use-package elisp-format
+  :defer t
+  :ensure t)
+
+(use-package symex
+  :ensure t
+  :config
+  (symex-initialize)
+  ;; (global-set-key (kbd "s-;") 'symex-mode-interface)
+  :custom
+  (symex-modal-backend 'hydra))
+
 (defhydra hydra-elisp (:color red
                               :hint nil)
   "
@@ -1404,11 +1472,13 @@ _eb_ eval buffer
 _er_ eval region
 _es_ eval sexp
 _f_ flycheck
+_s_ symex-mode
 "
   ("eb" eval-buffer)
   ("er" eval-region)
   ("es" pp-eval-last-sexp)
   ("f" hydra-flycheck/body :exit t)
+  ("s" symex-mode-interface)
   )
 
 ;; ======== COMMON LISP ========
@@ -1433,46 +1503,45 @@ _f_ flycheck
 ;;; Set of hydra menus to work with Slime.
 ;;; vindarel 2017
 ;;; copyleft
+(defhydra hydra-slime (:color blue :columns 3)
+  "Slime"
+  ("." slime-edit-definition "edit definition")
+  ("," slime-pop-find-definition-stack "return from definition")
+  ("c" hydra-slime-compile/body "compile")
+  ("e" hydra-slime-eval/body "Eval")
+  ("g" hydra-slime-navigate/body "Navigate")
+  ("h" hydra-slime-help/body "Help")
+  ("x" slime-scratch "Scratch")
+  ("ma" slime-macroexpand-all "Macroexpand All")
+  ("mo" slime-macroexpand-1 "Macroexpand One")
+  ("se" slime-eval-last-expression-in-repl "Eval Last Expression in Repl")
+  ("si" slime "Slime")
+  ("sq" slime-quit-lisp "Quit Lisp")
+  ("tf" slime-toggle-fancy-trace "Toggle Fancy Trace"))
 
-;; (defhydra slime-hydra (:color red)
-;;     "
-;;      Slime
-;; "
-;;     ("." slime-edit-definition "edit definition")
-;;     ("," slime-pop-find-definition-stack "return from definition")
-;;     ("s" slime-selector-hydra/body "selector" :color blue)
-;;     ;; evaluation
-;;     ;; debugging
-;;     ;; compilation
-;;     ;; cross reference
-;;     ;; editing
-;;     ;; …
-;;     )
+(defun slime-selector-call-by-key (key)
+  "Call a slime-selector function associated with the given KEY."
+  ;; Strangely, this code is obscured in slime.el. Functions are not
+  ;; defined by name.
+  (funcall (cl-third (cl-find key slime-selector-methods :key #'car))))
 
-;; (defun slime-selector-call-by-key (key)
-;;   "Call a slime-selector function associated with the given KEY."
-;;   ;; Strangely, this code is obscured in slime.el. Functions are not
-;;   ;; defined by name.
-;;   (funcall (cl-third (cl-find key slime-selector-methods :key #'car))))
-
-;; (defhydra slime-selector-hydra (:color red
-;;                                 :columns 4)
-;;   " Slime selector "
-;;   ("4" (slime-selector-call-by-key ?4) "other window")
-;;   ("c" (slime-selector-call-by-key ?c) "connections buffer")
-;;   ("d" (slime-selector-call-by-key ?d) "*sldb* buffer for the current connection")
-;;   ("e" (slime-selector-call-by-key ?e) "most recently emacs-lisp-mode buffer")
-;;   ("i" (slime-selector-call-by-key ?i) "*inferior-lisp* buffer")
-;;   ("l" (slime-selector-call-by-key ?l) "most recently visited lisp-mode buffer")
-;;   ("n" (slime-selector-call-by-key ?n) "next Lisp connection")
-;;   ("p" (slime-selector-call-by-key ?p) "previous Lisp connection")
-;;   ("r" (slime-selector-call-by-key ?r) "REPL")
-;;   ("s" (slime-selector-call-by-key ?s) "*slime-scratch* buffer")
-;;   ("t" (slime-selector-call-by-key ?t) "threads buffer")
-;;   ("v" (slime-selector-call-by-key ?v) "*slime-events* buffer")
-;;   ("q" nil "quit")
-;;   ("S" slime-hydra/body "Slime hydra" :color blue)
-;;   )
+(defhydra slime-selector-hydra (:color red
+                                :columns 4)
+  " Slime selector "
+  ("4" (slime-selector-call-by-key ?4) "other window")
+  ("c" (slime-selector-call-by-key ?c) "connections buffer")
+  ("d" (slime-selector-call-by-key ?d) "*sldb* buffer for the current connection")
+  ("e" (slime-selector-call-by-key ?e) "most recently emacs-lisp-mode buffer")
+  ("i" (slime-selector-call-by-key ?i) "*inferior-lisp* buffer")
+  ("l" (slime-selector-call-by-key ?l) "most recently visited lisp-mode buffer")
+  ("n" (slime-selector-call-by-key ?n) "next Lisp connection")
+  ("p" (slime-selector-call-by-key ?p) "previous Lisp connection")
+  ("r" (slime-selector-call-by-key ?r) "REPL")
+  ("s" (slime-selector-call-by-key ?s) "*slime-scratch* buffer")
+  ("t" (slime-selector-call-by-key ?t) "threads buffer")
+  ("v" (slime-selector-call-by-key ?v) "*slime-events* buffer")
+  ("q" nil "quit")
+  ("S" slime-hydra/body "Slime hydra" :color blue))
 
 
 ;; TODO: Add Debug Hydra
@@ -1519,19 +1588,6 @@ _f_ flycheck
   ("r" slime-who-references "Who References")
   ("m" slime-who-macroexpands "Who Macroexpands")
   ("s" slime-who-specializes "Who Specializes"))
-
-(defhydra hydra-slime-mode (:color blue :columns 3)
-  "Slime"
-  ("e" hydra-slime-eval/body "Eval")
-  ("h" hydra-slime-help/body "Help")
-  ("g" hydra-slime-navigate/body "Navigate")
-  ("x" slime-scratch "Scratch")
-  ("ma" slime-macroexpand-all "Macroexpand All")
-  ("mo" slime-macroexpand-1 "Macroexpand One")
-  ("se" slime-eval-last-expression-in-repl "Eval Last Expression in Repl")
-  ("si" slime "Slime")
-  ("sq" slime-quit-lisp "Quit Lisp")
-  ("tf" slime-toggle-fancy-trace "Toggle Fancy Trace"))
 
 
 ;; ======== RACKET ========
@@ -1893,6 +1949,8 @@ _vr_ reset      ^^                       ^^                 ^^
     ;; major modes with their associated hydras
     (emacs-lisp-mode
      (hydra-elisp/body))
+    (elisp-mode
+     (hydra-elisp/body))
     (c-mode
      (hydra-c/body))
     (js2-mode
@@ -1908,7 +1966,7 @@ _vr_ reset      ^^                       ^^                 ^^
     (org-agenda-mode
      (hydra-org-agenda/body))
     (lisp-mode
-     (hydra-slime-mode/body))
+     (hydra-slime/body))
     (t
      (error "%S not supported" major-mode))))
 
@@ -2046,7 +2104,7 @@ Consider only documented, non-obsolete functions."
  '(js2-bounce-indent-p t)
  '(linum-format " %5i ")
  '(package-selected-packages
-   '(quelpa doom-themes dashboard page-break-lines tree-sitter-langs tree-sitter ivy-xref lsp-ui company-lsp flycheck-irony irony-eldoc cmake-ide atom-one-dark-theme atom-dark-theme base16-theme oceanic-theme org-jira web-mode ivy-hydra auto-org-md org-id company-box skewer-mode skewer markdown-mode hydra org-bullets slime magit nord-theme eyebrowse evil-collection solarized-theme evil-magit ac-php company-php php-mode evil-cleverparens evil-smartparens smartparens tide indium js2-mode smart-mode-line sublime-themes counsel general evil))
+   '(symex elisp-format doom-modeline quelpa doom-themes dashboard page-break-lines tree-sitter-langs tree-sitter ivy-xref lsp-ui company-lsp flycheck-irony irony-eldoc cmake-ide atom-one-dark-theme atom-dark-theme base16-theme oceanic-theme org-jira web-mode ivy-hydra auto-org-md org-id company-box skewer-mode skewer markdown-mode hydra org-bullets slime magit nord-theme eyebrowse evil-collection solarized-theme evil-magit ac-php company-php php-mode evil-cleverparens evil-smartparens smartparens tide indium js2-mode smart-mode-line sublime-themes counsel general evil))
  '(sp-highlight-pair-overlay nil))
 
 (custom-set-faces
