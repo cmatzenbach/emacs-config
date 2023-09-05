@@ -70,7 +70,6 @@ See the docstrings of `defalias' and `make-obsolete' for more details."
 (setq initial-scratch-message "Welcome to Emacs") ;; print a default message in the empty scratch buffer opened at startup
 (setq user-full-name "Chris Matzenbach"
       user-mail-address "matzy@proton.me")
-(global-linum-mode 1)
 (scroll-bar-mode -1)
 (tool-bar-mode -1)
 (setq-default indent-tabs-mode nil)  ;; use spaces instead of tabs
@@ -88,6 +87,7 @@ See the docstrings of `defalias' and `make-obsolete' for more details."
 (setq exec-path (append exec-path '("/usr/texbin")))
 (setq exec-path (append exec-path '("/usr/bin")))
 (setq exec-path (append exec-path '("/usr/local/bin")))
+(add-hook 'prog-mode-hook 'display-line-numbers-mode)
 
 ;; ======== HISTORY ========
 (setq savehist-file "~/.emacs.d/savehist")
@@ -1114,8 +1114,15 @@ _f_ flycheck
   (add-hook 'typescript-mode-hook (lambda () (tsi-typescript-mode 1)))
   (add-hook 'json-mode-hook (lambda () (tsi-json-mode 1)))
   (add-hook 'css-mode-hook (lambda () (tsi-css-mode 1)))
-  (add-hook 'scss-mode-hook (lambda () (tsi-scss-mode 1)))
+  ;;(add-hook 'scss-mode-hook (lambda () (tsi-scss-mode 1)))
   )
+;; (use-package tsx-mode
+;;   :ensure t
+;;   :defer t
+;;   :quelpa (tsx-mode :fetcher github :repo "orzechowskid/tsx-mode.el")
+;;   :mode
+;;   ("\\.tsx\\'" . tsx-mode)
+;;   ("\\.jsx\\'" . tsx-mode))
 (use-package tsx-mode
   :ensure t
   :defer t
@@ -1258,7 +1265,8 @@ _f_ flycheck
              (company-mode t)
              (ac-php-core-eldoc-setup) ;; enable eldoc
              (make-local-variable 'company-backends)
-             (add-to-list 'company-backends 'company-ac-php-backend)))
+             (add-to-list 'company-backends 'company-ac-php-backend)
+             ))
 
 ;; configure smartparens
 (add-hook 'php-mode-hook #'smartparens-mode)
@@ -1610,7 +1618,11 @@ Links, footnotes  C-c C-a    _L_: link          _U_: uri        _F_: footnote   
             (org-bullets-mode t)))
 (setq org-ellipsis "⤵")
 
-(setq org-default-notes-file "~/Dropbox/org/tasks.org")
+(setq org-todo-keywords '(
+  (sequence "TODO(t!)" "NEXT(n!)" "STARTED(a!)" "WAIT(w@/!)" "OTHERS(o!)" "|" "DONE(d)" "CANCELLED(c)")
+))
+
+(setq org-default-notes-file "~/Dropbox/org/inbox.org")
 (setq org-capture-templates
       '(
         ("t" "Todo" entry (file+headline "~/Dropbox/org/inbox.org" "Tasks")
@@ -1628,33 +1640,38 @@ Links, footnotes  C-c C-a    _L_: link          _U_: uri        _F_: footnote   
 (setq org-log-done 'time)
 
 ;; configure which files to use in org-agenda
-(setq org-agenda-files (list "~/Dropox/org/inbox.org"
-                             "~/Dropox/org/email.org"
-                             "~/Dropox/org/tasks.org"
-                             "~/Dropox/org/wtasks.org"
-                             "~/Dropox/org/journal.org"
-                             "~/Dropox/org/wjournal.org"
-                             "~/Dropox/org/kb.org"
-                             "~/Dropox/org/wkb.org"
-                             ))
+(setq org-agenda-files (list "~/Dropbox/org/inbox.org"
+                             "~/Dropbox/org/todo.org"
+                             "~/Dropbox/org/wtodo.org"
+                             "~/Dropbox/org/journal.org"
+                             "~/Dropbox/org/wjournal.org"
+                             "~/Dropbox/org/kb.org"
+                             "~/Dropbox/org/wkb.org"))
+
 (setq org-agenda-text-search-extra-files
-      (list "~/Dropox/org/someday.org"
-            "~/Dropbox/org/config.org"
-            ))
+      (list "~/Dropbox/org/someday.org"
+            "~/Dropbox/org/config.org"))
 
 (setq org-refile-targets '((nil :maxlevel . 2)
                            (org-agenda-files :maxlevel . 2)
                            ("~/Dropbox/org/someday.org" :maxlevel . 2)
-                           ("~/Dropbox/org/templates.org" :maxlevel . 2)
-                           )
-      )
-(setq org-outline-path-complete-in-steps nil)         ; Refile in a single go
+                           ("~/Dropbox/org/templates.org" :maxlevel . 2)))
+
+(setq org-outline-path-complete-in-steps nil) ;; Refile in a single go
 (setq org-refile-use-outline-path 'file)
 
-(use-package org-jira
-  :defer t
-  :config
-  (setq jiralib-url "https://jira.rsna.org/"))
+(defun org-archive-done-tasks ()
+  (interactive)
+  (org-map-entries
+   (lambda ()
+     (org-archive-subtree)
+     (setq org-map-continue-from (outline-previous-heading)))
+   "/DONE" 'file)
+  (org-map-entries
+   (lambda ()
+     (org-archive-subtree)
+     (setq org-map-continue-from (outline-previous-heading)))
+   "/CANCELLED" 'file))
 
 ;; Hydra for org agenda (graciously taken from Spacemacs)
 (defhydra hydra-org-agenda (:pre (setq which-key-inhibit t)
@@ -1997,6 +2014,8 @@ Consider only documented, non-obsolete functions."
  '(js-indent-level 2)
  '(js2-bounce-indent-p t)
  '(linum-format " %5i ")
+ '(org-agenda-files
+   '("/home/matzy/Dropbox/org/inbox.org" "/home/matzy/Dropbox/org/journal.org" "/home/matzy/Dropbox/org/wjournal.org" "/home/matzy/Dropbox/org/kb.org" "/home/matzy/Dropbox/org/wkb.org"))
  '(package-selected-packages
    '(doom-themes dashboard page-break-lines tree-sitter-langs tree-sitter ivy-xref lsp-ui company-lsp flycheck-irony irony-eldoc cmake-ide atom-one-dark-theme atom-dark-theme base16-theme oceanic-theme org-jira web-mode ivy-hydra auto-org-md org-id company-box skewer-mode skewer markdown-mode hydra org-bullets slime magit nord-theme eyebrowse evil-collection solarized-theme evil-magit ac-php company-php php-mode evil-cleverparens evil-smartparens smartparens tide indium js2-mode smart-mode-line sublime-themes counsel general evil))
  '(sp-highlight-pair-overlay nil))
